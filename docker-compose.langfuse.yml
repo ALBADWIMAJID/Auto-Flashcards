@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  langfuse:
+    image: ghcr.io/langfuse/langfuse:latest
+    container_name: auto-flashcards-langfuse
+    environment:
+      # В реальном проекте здесь были бы ключи доступа, URL базы данных и т.п.
+      # Для MVP оставляем как заглушку.
+      - NEXTAUTH_SECRET=dev-secret
+    ports:
+      - "3001:3000"

@@ -1,0 +1,139 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+const API_BASE = "http://127.0.0.1:8000";
+
+/**
+ * Страница UC-4: статистика обучения.
+ * Берёт реальные данные с бекенда:
+ *   GET /stats/overview
+ */
+export default function StatsPage() {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const loadStats = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch(`${API_BASE}/stats/overview`);
+      if (!res.ok) {
+        throw new Error(`Ошибка загрузки статистики: ${res.status}`);
+      }
+      const data = await res.json();
+      setStats(data);
+    } catch (err) {
+      console.error(err);
+      setError(
+        "Не удалось загрузить статистику. Проверьте, что backend запущен и есть данные (колоды, карточки, ответы)."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  return (
+    <div className="flex justify-center px-4 py-10">
+      <div className="w-full max-w-3xl space-y-6">
+        <header className="space-y-2">
+          <h1 className="text-2xl font-bold">Статистика обучения </h1>
+          <p className="text-sm text-slate-300">
+            Здесь отображается агрегированная статистика по всем колодам и
+            карточкам: сколько всего колод и карточек, сколько нужно повторить
+            сегодня, сколько уже считается выученными и по скольким карточкам
+            уже были ответы в режиме повторения.
+          </p>
+        </header>
+
+        <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-xs text-slate-400">
+              Данные с эндпоинта <code className="text-sky-400">/stats/overview</code>
+            </div>
+            <button
+              type="button"
+              onClick={loadStats}
+              disabled={loading}
+              className="rounded-lg bg-sky-600 hover:bg-sky-500 disabled:bg-slate-700 disabled:text-slate-400 px-3 py-2 text-xs font-semibold transition-colors"
+            >
+              {loading ? "Обновление..." : "Обновить"}
+            </button>
+          </div>
+
+          {error && (
+            <div className="mt-2 rounded-lg border border-red-700 bg-red-950/40 px-3 py-2 text-xs text-red-200">
+              {error}
+            </div>
+          )}
+
+          {!stats && !error && !loading && (
+            <div className="text-xs text-slate-400">
+              Статистика пока не загружена.
+            </div>
+          )}
+
+          {stats && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                <div className="text-xs text-slate-400">Всего колод</div>
+                <div className="text-3xl font-bold mt-1">
+                  {stats.total_decks}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                <div className="text-xs text-slate-400">Всего карточек</div>
+                <div className="text-3xl font-bold mt-1">
+                  {stats.total_cards}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                <div className="text-xs text-slate-400">
+                  К повторению сегодня
+                </div>
+                <div className="text-3xl font-bold mt-1">
+                  {stats.due_today}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 space-y-1">
+                <div className="text-xs text-slate-400">
+                  Выученные карточки (repetitions ≥ 3)
+                </div>
+                <div className="text-3xl font-bold">
+                  {stats.learned_cards}
+                </div>
+                <div className="text-[10px] text-slate-500">
+                  По этим карточкам было достаточно успешных повторений.
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 md:col-span-2 flex items-center justify-between">
+                <div>
+                  <div className="text-xs text-slate-400">
+                    Карточки, по которым уже были ответы
+                  </div>
+                  <div className="text-3xl font-bold mt-1">
+                    {stats.reviewed_cards}
+                  </div>
+                </div>
+                <div className="text-[10px] text-slate-500 max-w-[200px] text-right">
+                  Это количество карточек, для которых уже хотя бы один раз
+                  была выставлена оценка в режиме повторения.
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}

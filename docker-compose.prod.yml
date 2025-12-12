@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: auto-flashcards-backend-prod
+    # Загружаем секреты и ключи из .env (OPENAI_API_KEY, LANGFUSE_*)
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+    # Healthcheck для backend: обращаемся к /health внутри контейнера
+    healthcheck:
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - |
+          import urllib.request, sys
+          resp = urllib.request.urlopen('http://localhost:8000/health')
+          sys.exit(0 if resp.status == 200 else 1)
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: auto-flashcards-frontend-prod
+    # ВАЖНО: фронтенд будет обращаться к backend по имени сервиса "backend"
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+    # Healthcheck для frontend: проверяем, что главная страница отвечает
+    healthcheck:
+      test: >
+        CMD-SHELL node -e "const http=require('http');
+        const req=http.request({host:'localhost',port:3000,path:'/'},res=>{process.exit(res.statusCode===200?0:1)});
+        req.on('error',()=>process.exit(1));
+        req.end();"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

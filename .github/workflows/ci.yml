@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - lab3-*
+  pull_request:
+    branches:
+      - main
+      - lab3-*
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout репозитория
+        uses: actions/checkout@v4
+
+      - name: Установка Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Установка зависимостей backend
+        run: |
+          pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout репозитория
+        uses: actions/checkout@v4
+
+      - name: Установка Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Установка зависимостей frontend
+        run: |
+          cd frontend
+          npm install
