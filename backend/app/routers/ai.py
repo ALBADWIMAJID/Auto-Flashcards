@@ -3,58 +3,64 @@
 from typing import List
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 
-from ml.models.baseline import generate_flashcards
-from ml.tracing.langfuse_config import trace_generation
+from ml.service.flashcards_service import (
+    flashcards_service,
+    FlashcardsRequest,
+)
+from ml.api.schemas import (
+    Flashcard,
+    GenerateFlashcardsRequest,
+    GenerateFlashcardsResponse,
+)
 
 router = APIRouter()
 
 
-class GenerateRequest(BaseModel):
+@router.post(
+    "/generate",
+    response_model=GenerateFlashcardsResponse,
+    summary="Генерация флеш-карточек из текста",
+)
+async def generate_flashcards_endpoint(
+    payload: GenerateFlashcardsRequest,
+) -> GenerateFlashcardsResponse:
     """
-    Входная модель для генерации карточек.
-    text — это учебный материал (упрощённо: обычный текст).
-    """
-    text: str
+    Эндпоинт для генерации флеш-карточек по учебному тексту.
 
+    Вход:
+    - text: исходный текст
+    - max_cards: максимум карточек
 
-class Flashcard(BaseModel):
-    """
-    Одна карточка (вопрос-ответ).
-    В MVP используем только question/answer.
-    """
-    question: str
-    answer: str
-
-
-class GenerateResponse(BaseModel):
-    """
-    Ответ сервиса генерации: список карточек.
-    """
-    cards: List[Flashcard]
-
-
-@router.post("/generate", response_model=GenerateResponse)
-async def generate_cards(payload: GenerateRequest) -> GenerateResponse:
-    """
-    Эндпоинт для генерации карточек на основе текста.
-
-    Внутри:
-    - вызывает baseline-модель из ml/models/baseline.py;
-    - опционально отправляет данные в систему трассировки (Langfuse stub).
+    Выход:
+    - cards: список {question, answer}
+    - cached: был ли результат взят из кэша
+    - latency_ms: сколько миллисекунд заняла генерация
     """
     text = payload.text.strip()
     if not text:
-        raise HTTPException(status_code=400, detail="Текст для генерации пустой")
+        raise HTTPException(
+            status_code=400,
+            detail="Текст для генерации пустой",
+        )
 
-    # 1) вызываем baseline-модель
-    cards_data = generate_flashcards(text)
+    # 1) Формируем запрос к сервису
+    service_request = FlashcardsRequest(
+        text=text,
+        max_cards=payload.max_cards,
+    )
 
-    # 2) отправляем данные в "трассировку" (сейчас это просто заглушка)
-    trace_generation(prompt=text, cards=cards_data)
+    # 2) Вызываем слой сервиса (с кэшем, latency и Langfuse-трейсами)
+    result = flashcards_service.generate(service_request)
 
-    # 3) преобразуем словари в Pydantic-модели для ответа API
-    cards = [Flashcard(**card) for card in cards_data]
+    # 3) Преобразуем словари в Pydantic-модели
+    cards_models: List[Flashcard] = [
+        Flashcard(**card) for card in result.cards
+    ]
 
-    return GenerateResponse(cards=cards)
+    # 4) Возвращаем расширенный ответ (совместимый с Lab 3)
+    return GenerateFlashcardsResponse(
+        cards=cards_models,
+        cached=result.cached,
+        latency_ms=result.latency_ms,
+    )
