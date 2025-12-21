@@ -41,7 +41,6 @@ async function fetchWithAuth(url, options = {}) {
 function TopNav({ isAuthed }) {
   const items = [
     { href: "/", label: "Home" },
-    { href: "/decks", label: "Decks" },
     { href: "/review", label: "Review" },
     { href: "/stats", label: "Stats" },
     { href: "/profile", label: "Profile" },
