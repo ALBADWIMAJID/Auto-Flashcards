@@ -2,46 +2,51 @@
 from __future__ import annotations
 
 import os
-from functools import lru_cache
 from typing import Optional, Tuple, Dict, Any
 
 import httpx
 from dotenv import load_dotenv
 from fastapi import Header, HTTPException
 
-# يقرأ .env محليًا (على Render لن يعتمد عليه، لأن Render يستخدم Environment Variables)
+# Loads .env locally (on Render you typically rely on dashboard env vars)
 load_dotenv()
 
 
-def _env(name: str) -> Optional[str]:
-    v = os.getenv(name)
-    if v is None:
+def _clean_env(value: Optional[str]) -> Optional[str]:
+    if value is None:
         return None
-    v = v.strip()
+    v = value.strip()
+    # handle accidental quotes
+    if (v.startswith('"') and v.endswith('"')) or (v.startswith("'") and v.endswith("'")):
+        v = v[1:-1].strip()
     return v or None
 
 
-@lru_cache(maxsize=1)
 def _get_supabase_env() -> Tuple[str, str]:
-    """
-    يرجع (SUPABASE_URL, API_KEY) مرة واحدة (caching).
-    ملاحظة: تغيير env يحتاج Restart/Redeploy حتى يتحدث الكاش.
-    """
-    supabase_url = _env("SUPABASE_URL")
-
-    api_key = (
-        _env("SUPABASE_ANON_KEY")
-        or _env("SUPABASE_SERVICE_ROLE_KEY")
-        or _env("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+    # Accept multiple possible names (backend should prefer SUPABASE_URL)
+    supabase_url = (
+        os.getenv("SUPABASE_URL")
+        or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+        or os.getenv("SUPABASE_PROJECT_URL")
     )
+    supabase_url = _clean_env(supabase_url)
+
+    # Prefer anon/service role; keep NEXT_PUBLIC as a last resort
+    api_key = (
+        os.getenv("SUPABASE_ANON_KEY")
+        or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+        or os.getenv("SUPABASE_PUBLISHABLE_KEY")
+        or os.getenv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY")
+    )
+    api_key = _clean_env(api_key)
 
     if not supabase_url or not api_key:
         raise HTTPException(
-            status_code=503,
+            status_code=500,
             detail=(
-                "Server misconfigured: Missing Supabase env vars. "
-                "Set SUPABASE_URL and one of "
-                "[SUPABASE_ANON_KEY | SUPABASE_SERVICE_ROLE_KEY | NEXT_PUBLIC_SUPABASE_ANON_KEY]."
+                "Server misconfigured: SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and one of "
+                "[SUPABASE_ANON_KEY | SUPABASE_SERVICE_ROLE_KEY | NEXT_PUBLIC_SUPABASE_ANON_KEY] must be set"
             ),
         )
 
@@ -49,15 +54,6 @@ def _get_supabase_env() -> Tuple[str, str]:
 
 
 async def _fetch_supabase_user(authorization: Optional[str]) -> Dict[str, Any]:
-    """
-    يستدعي Supabase Auth endpoint للحصول على بيانات المستخدم من الـ access token.
-    """
-
-    # خيار مفيد للتطوير فقط (لا تفعّله في الإنتاج):
-    # لو حطيت DISABLE_AUTH=1 بيرجع مستخدم وهمي بدون Supabase
-    if _env("DISABLE_AUTH") == "1":
-        return {"id": "dev-user", "email": "dev@example.com"}
-
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing Authorization header")
 
@@ -72,7 +68,7 @@ async def _fetch_supabase_user(authorization: Optional[str]) -> Dict[str, Any]:
     url = f"{supabase_url.rstrip('/')}/auth/v1/user"
 
     try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
+        async with httpx.AsyncClient(timeout=10) as client:
             r = await client.get(
                 url,
                 headers={
@@ -83,35 +79,21 @@ async def _fetch_supabase_user(authorization: Optional[str]) -> Dict[str, Any]:
     except httpx.RequestError:
         raise HTTPException(status_code=502, detail="Failed to reach Supabase Auth service")
 
-    # 401/403 معناها التوكن غير صالح/منتهي
-    if r.status_code in (401, 403):
+    if r.status_code != 200:
         raise HTTPException(status_code=401, detail="Invalid/expired token")
 
-    # أي شيء غير 200 وغير 401/403 غالبًا مشكلة اتصال/إعدادات
-    if r.status_code != 200:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Supabase Auth error (status={r.status_code})",
-        )
-
     data = r.json()
-    user_id = data.get("id")
-    if not user_id:
+    if not data.get("id"):
         raise HTTPException(status_code=401, detail="User id not found in token")
-
     return data
 
 
 async def get_current_user(authorization: Optional[str] = Header(None)) -> Dict[str, Any]:
-    """
-    يرجع dict فيه id + email ... إلخ.
-    """
+    """يرجع dict فيه id + email ... الخ"""
     return await _fetch_supabase_user(authorization)
 
 
 async def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
-    """
-    للتوافق مع بقية الراوترات: يرجع UUID فقط.
-    """
+    """للتوافق: يرجع UUID فقط."""
     data = await _fetch_supabase_user(authorization)
     return data["id"]
