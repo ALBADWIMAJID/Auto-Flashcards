@@ -1,6 +1,6 @@
 # backend/app/main.py
-
 import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -8,54 +8,59 @@ from backend.db import init_db
 from .routers import ai, decks, review, stats
 from .exceptions import init_exception_handlers
 
+
+def get_allowed_origins() -> list[str]:
+    """
+    Configure CORS origins via env var:
+    ALLOWED_ORIGINS="https://auto-flashcards-sigma.vercel.app,http://localhost:3000"
+    """
+    raw = os.getenv("ALLOWED_ORIGINS", "")
+    origins = [o.strip() for o in raw.split(",") if o.strip()]
+
+    if not origins:
+        # defaults for local + your Vercel domain
+        origins = [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "https://auto-flashcards-sigma.vercel.app",
+        ]
+    return origins
+
+
 app = FastAPI(
     title="Auto-Flashcards API",
-    description="MVP prototype backend for Auto-Flashcards",
+    description="MVP прототип backend-сервиса для проекта Auto-Flashcards (роль: Fullstack)",
     version="0.1.0",
 )
 
-# ✅ CORS: لا تستخدم "*" مع allow_credentials=True
-# أضف دومين Vercel الحقيقي + localhost للتطوير
-allowed_origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://auto-flashcards-sigma.vercel.app",
-]
-
-# (اختياري) لو حبيت تتحكم بالدومين من Render Env:
-# FRONTEND_ORIGIN="https://your-domain.vercel.app"
-extra_origin = os.getenv("FRONTEND_ORIGIN")
-if extra_origin:
-    allowed_origins.append(extra_origin)
-
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=[
-        "Authorization",
-        "Content-Type",
-        "Accept",
-        "Origin",
-        "X-Requested-With",
-    ],
+    allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
 )
 
 init_exception_handlers(app)
+
 
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()
 
+
 @app.get("/", tags=["system"])
-def root():
+async def root() -> dict:
     return {"status": "ok", "service": "Auto-Flashcards API"}
 
+
 @app.get("/health", tags=["system"])
-def health_check():
+async def health_check() -> dict:
     return {"status": "ok"}
 
+
+# Routers
 app.include_router(ai.router, prefix="/ai", tags=["ai"])
 app.include_router(decks.router, prefix="/decks", tags=["decks"])
 app.include_router(review.router, prefix="/review", tags=["review"])
