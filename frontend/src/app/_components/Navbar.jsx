@@ -10,7 +10,7 @@ function cx(...classes) {
 
 const NAV_ITEMS = [
   { href: "/", label: "Главная" },
-  { href: "/decks", label: "Колоды" },
+  { href: "/decks", label: "" },
   { href: "/review", label: "Повторение" },
   { href: "/stats", label: "Статистика" },
   { href: "/profile", label: "Профиль" },
@@ -84,7 +84,7 @@ export default function Navbar() {
                 Auto-Flashcards
               </div>
               <div className="text-[10px] md:text-xs text-slate-400">
-                MVP · Next.js + FastAPI
+                CodeX Team Project
               </div>
             </div>
           </Link>
