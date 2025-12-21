@@ -1,5 +1,6 @@
 # backend/app/main.py
 
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,17 +10,27 @@ from .exceptions import init_exception_handlers
 
 app = FastAPI(
     title="Auto-Flashcards API",
-    description="MVP прототип backend-сервиса для проекта Auto-Flashcards (роль: Fullstack)",
+    description="MVP prototype backend for Auto-Flashcards",
     version="0.1.0",
 )
 
 # ✅ CORS: لا تستخدم "*" مع allow_credentials=True
+# أضف دومين Vercel الحقيقي + localhost للتطوير
+allowed_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://auto-flashcards-sigma.vercel.app",
+]
+
+# (اختياري) لو حبيت تتحكم بالدومين من Render Env:
+# FRONTEND_ORIGIN="https://your-domain.vercel.app"
+extra_origin = os.getenv("FRONTEND_ORIGIN")
+if extra_origin:
+    allowed_origins.append(extra_origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=[
@@ -37,24 +48,15 @@ init_exception_handlers(app)
 def on_startup() -> None:
     init_db()
 
+@app.get("/", tags=["system"])
+def root():
+    return {"status": "ok", "service": "Auto-Flashcards API"}
+
 @app.get("/health", tags=["system"])
-async def health_check() -> dict:
+def health_check():
     return {"status": "ok"}
 
 app.include_router(ai.router, prefix="/ai", tags=["ai"])
 app.include_router(decks.router, prefix="/decks", tags=["decks"])
 app.include_router(review.router, prefix="/review", tags=["review"])
 app.include_router(stats.router, prefix="/stats", tags=["stats"])
-
-
-from fastapi import FastAPI
-
-app = FastAPI()
-
-@app.get("/")
-def root():
-    return {"status": "ok", "service": "Auto-Flashcards API"}
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
