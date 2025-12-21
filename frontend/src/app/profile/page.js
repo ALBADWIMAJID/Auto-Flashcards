@@ -50,7 +50,6 @@ export default function ProfilePage() {
   const [aiError, setAiError] = useState("");
   const [generatingDeckId, setGeneratingDeckId] = useState(null);
 
-  // ✅ helper: fetch to backend with Authorization Bearer token
   const apiFetch = async (path, options = {}) => {
     const { data: sessionData, error: sessionErr } =
       await supabase.auth.getSession();
@@ -65,7 +64,6 @@ export default function ProfilePage() {
     const headers = new Headers(options.headers || {});
     headers.set("Authorization", `Bearer ${token}`);
 
-    // set JSON content-type only if body is a string (JSON), not FormData/Blob
     if (
       !headers.has("Content-Type") &&
       options.body &&
@@ -110,7 +108,6 @@ export default function ProfilePage() {
     };
 
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   const handleLogout = async () => {
@@ -171,7 +168,6 @@ export default function ProfilePage() {
     try {
       const file = selectedFile;
 
-      // optional: basic extension check
       const name = (file.name || "").toLowerCase();
       const ok =
         name.endsWith(".txt") || name.endsWith(".pdf") || name.endsWith(".docx");
@@ -219,7 +215,6 @@ export default function ProfilePage() {
     setGeneratingDeckId(deckId);
 
     try {
-      // 1) download from Supabase as Blob
       const { data: blob, error: downloadError } = await supabase.storage
         .from(BUCKET)
         .download(lastFile.path);
@@ -227,7 +222,6 @@ export default function ProfilePage() {
       if (downloadError) throw downloadError;
       if (!blob) throw new Error("Failed to download file from storage.");
 
-      // 2) send file to backend as multipart/form-data
       const mime = blob.type || guessMimeByName(lastFile.name) || "";
       const f = new File([blob], lastFile.name, { type: mime });
 
@@ -237,7 +231,7 @@ export default function ProfilePage() {
 
       const aiRes = await fetch(`${API_BASE}/ai/generate-file`, {
         method: "POST",
-        body: form, // DO NOT set Content-Type manually
+        body: form,
       });
 
       if (!aiRes.ok) {
@@ -249,7 +243,6 @@ export default function ProfilePage() {
       const cards = aiJson.cards || [];
       if (!cards.length) throw new Error("AI returned 0 cards.");
 
-      // 3) create cards in deck (protected)
       for (const card of cards) {
         const question = clipStr(card.question, MAX_QUESTION_LEN).trim();
         const answer = clipStr(card.answer, MAX_ANSWER_LEN).trim();
@@ -267,7 +260,6 @@ export default function ProfilePage() {
         }
       }
 
-      // 4) refresh deck
       const deckRes = await apiFetch(`/decks/${deckId}`, { method: "GET" });
       if (deckRes.ok) {
         const updatedDeck = await deckRes.json();
@@ -284,34 +276,14 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#0f172a",
-          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-          padding: "1rem",
-        }}
-      >
-        <div style={{ textAlign: "center" }}>
-          <div
-            style={{
-              width: "50px",
-              height: "50px",
-              border: "4px solid rgba(139, 92, 246, 0.3)",
-              borderTop: "4px solid #8b5cf6",
-              borderRadius: "50%",
-              animation: "spin 1s linear infinite",
-              margin: "0 auto 1rem",
-            }}
-          />
-          <p style={{ color: "#94a3b8", fontSize: "1.1rem", fontWeight: 500 }}>
-            Loading your workspace...
-          </p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4">
+        <div className="text-center">
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="absolute inset-0 border-4 border-violet-500/30 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-transparent border-t-violet-500 rounded-full animate-spin"></div>
+          </div>
+          <p className="text-slate-300 text-lg font-medium">Loading your workspace...</p>
         </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -319,117 +291,76 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#0f172a",
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-        padding: "1rem",
-      }}
-    >
-      <nav
-        style={{
-          background: "#1e293b",
-          borderBottom: "1px solid #334155",
-          padding: "0.75rem 0",
-          marginBottom: "2rem",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1400px",
-            margin: "0 auto",
-            padding: "0 1rem",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <span style={{ fontSize: "1.5rem" }}>🎓</span>
-            <span style={{ fontSize: "1.25rem", fontWeight: 700, color: "#f1f5f9" }}>
-              MVP
-            </span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Animated Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 -left-20 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 -right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1.5s'}}></div>
+      </div>
+
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-slate-700/50 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent">
+                Auto-Flashcards
+              </span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 rounded-lg border border-slate-600 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white transition-all duration-200 flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
           </div>
-          <button
-            onClick={handleLogout}
-            style={{
-              padding: "0.5rem 1.25rem",
-              borderRadius: "0.5rem",
-              border: "1px solid #475569",
-              background: "transparent",
-              color: "#cbd5e1",
-              cursor: "pointer",
-              fontWeight: 500,
-              fontSize: "0.9rem",
-            }}
-          >
-            Sign Out
-          </button>
         </div>
       </nav>
 
-      <main style={{ maxWidth: "1400px", margin: "0 auto" }}>
-        <header
-          style={{
-            marginBottom: "2rem",
-            padding: "1.5rem",
-            borderRadius: "0.75rem",
-            background: "#1e293b",
-            border: "1px solid #334155",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "clamp(1.5rem, 5vw, 2rem)",
-              marginBottom: "0.5rem",
-              color: "#f1f5f9",
-              fontWeight: 700,
-            }}
-          >
-            Welcome, {user.user_metadata?.full_name || "majid"}! 👋
-          </h1>
-          <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>{user.email}</p>
+      {/* Main Content */}
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Welcome Header */}
+        <header className="mb-6 sm:mb-8 p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl border border-slate-700/50 shadow-xl">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-2xl sm:text-3xl shadow-lg">
+              👋
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                Welcome back, {user.user_metadata?.full_name || "Student"}!
+              </h1>
+              <p className="text-slate-400 text-sm sm:text-base">{user.email}</p>
+            </div>
+          </div>
         </header>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-            gap: "1.5rem",
-            marginBottom: "2rem",
-          }}
-        >
-          <section
-            style={{
-              padding: "1.5rem",
-              borderRadius: "0.75rem",
-              background: "#1e293b",
-              border: "1px solid #334155",
-            }}
-          >
-            <div style={{ marginBottom: "1.5rem" }}>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#f1f5f9" }}>
-                📚 Create New Deck
-              </h2>
-              <p style={{ color: "#94a3b8", fontSize: "0.85rem" }}>
-                Start building your flashcard collection
-              </p>
+        {/* Action Cards Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          {/* Create Deck Card */}
+          <div className="p-6 sm:p-8 rounded-2xl bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 shadow-xl hover:border-violet-500/50 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center">
+                <svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-white">Create New Deck</h2>
+                <p className="text-slate-400 text-xs sm:text-sm">Build your flashcard collection</p>
+              </div>
             </div>
 
-            <form onSubmit={handleCreateDeck}>
-              <div style={{ marginBottom: "1rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    fontWeight: 600,
-                    color: "#cbd5e1",
-                  }}
-                >
+            <form onSubmit={handleCreateDeck} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Deck Title
                 </label>
                 <input
@@ -437,212 +368,227 @@ export default function ProfilePage() {
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    borderRadius: "0.5rem",
-                    border: "1px solid #475569",
-                    background: "#0f172a",
-                    color: "#f1f5f9",
-                    boxSizing: "border-box",
-                  }}
+                  placeholder="e.g., Biology Chapter 5"
+                  className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-slate-600 bg-slate-950/50 text-white placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
                 />
               </div>
 
-              <div style={{ marginBottom: "1.25rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    fontWeight: 600,
-                    color: "#cbd5e1",
-                  }}
-                >
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Description (optional)
                 </label>
                 <textarea
                   rows={3}
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    borderRadius: "0.5rem",
-                    border: "1px solid #475569",
-                    background: "#0f172a",
-                    color: "#f1f5f9",
-                    boxSizing: "border-box",
-                  }}
+                  placeholder="What's this deck about?"
+                  className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-slate-600 bg-slate-950/50 text-white placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all resize-none"
                 />
               </div>
 
               {error && (
-                <div
-                  style={{
-                    padding: "0.75rem",
-                    borderRadius: "0.5rem",
-                    background: "rgba(239, 68, 68, 0.1)",
-                    border: "1px solid rgba(239, 68, 68, 0.3)",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  <p style={{ color: "#fca5a5", fontSize: "0.85rem", margin: 0 }}>
-                    {error}
-                  </p>
+                <div className="p-3 sm:p-4 rounded-xl bg-red-950/50 border border-red-500/50 flex items-start gap-2">
+                  <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-red-200 text-sm">{error}</p>
                 </div>
               )}
 
               <button
                 type="submit"
                 disabled={creating}
-                style={{
-                  width: "100%",
-                  padding: "0.85rem",
-                  borderRadius: "0.5rem",
-                  border: "none",
-                  background: creating ? "#475569" : "#8b5cf6",
-                  color: "white",
-                  fontWeight: 600,
-                  cursor: creating ? "not-allowed" : "pointer",
-                }}
+                className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 disabled:from-slate-700 disabled:to-slate-700 text-white font-semibold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {creating ? "Creating..." : "✨ Create Deck"}
+                {creating ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Create Deck
+                  </>
+                )}
               </button>
             </form>
-          </section>
+          </div>
 
-          <section
-            style={{
-              padding: "1.5rem",
-              borderRadius: "0.75rem",
-              background: "#1e293b",
-              border: "1px solid #334155",
-            }}
-          >
-            <div style={{ marginBottom: "1.5rem" }}>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#f1f5f9" }}>
-                📄 Upload Source File
-              </h2>
-              <p style={{ color: "#94a3b8", fontSize: "0.85rem" }}>
-                Upload a .txt/.pdf/.docx file to generate flashcards automatically
-              </p>
+          {/* Upload File Card */}
+          <div className="p-6 sm:p-8 rounded-2xl bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 shadow-xl hover:border-blue-500/50 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-white">Upload Source File</h2>
+                <p className="text-slate-400 text-xs sm:text-sm">Auto-generate flashcards with AI</p>
+              </div>
             </div>
 
-            <form onSubmit={handleFileUpload}>
-              <input
-                type="file"
-                accept=".txt,.pdf,.docx"
-                onChange={(e) => {
-                  setSelectedFile(e.target.files?.[0] || null);
-                  setUploadError("");
-                  setUploadMessage("");
-                }}
-              />
-
-              <div style={{ height: 12 }} />
+            <form onSubmit={handleFileUpload} className="space-y-4">
+              <div className="relative">
+                <input
+                  type="file"
+                  accept=".txt,.pdf,.docx"
+                  onChange={(e) => {
+                    setSelectedFile(e.target.files?.[0] || null);
+                    setUploadError("");
+                    setUploadMessage("");
+                  }}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-slate-600 bg-slate-950/50 text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500/20 file:text-blue-400 file:font-medium hover:border-blue-500/50 transition-all cursor-pointer"
+                />
+                <p className="mt-2 text-xs text-slate-500">Supported: .txt, .pdf, .docx</p>
+              </div>
 
               <button
                 type="submit"
                 disabled={uploading || !selectedFile}
-                style={{
-                  width: "100%",
-                  padding: "0.85rem",
-                  borderRadius: "0.5rem",
-                  border: "none",
-                  background: uploading || !selectedFile ? "#475569" : "#3b82f6",
-                  color: "white",
-                  fontWeight: 600,
-                  cursor: uploading || !selectedFile ? "not-allowed" : "pointer",
-                }}
+                className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 disabled:from-slate-700 disabled:to-slate-700 text-white font-semibold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {uploading ? "⏳ Uploading..." : "📤 Upload File"}
+                {uploading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Upload File
+                  </>
+                )}
               </button>
 
               {uploadError && (
-                <p style={{ color: "#fca5a5", marginTop: 10 }}>❌ {uploadError}</p>
+                <div className="p-3 rounded-xl bg-red-950/50 border border-red-500/50 flex items-start gap-2">
+                  <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <p className="text-red-200 text-sm">{uploadError}</p>
+                </div>
               )}
               {uploadMessage && (
-                <p style={{ color: "#86efac", marginTop: 10 }}>✅ {uploadMessage}</p>
+                <div className="p-3 rounded-xl bg-green-950/50 border border-green-500/50 flex items-start gap-2">
+                  <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <p className="text-green-200 text-sm">{uploadMessage}</p>
+                </div>
               )}
             </form>
-          </section>
+          </div>
         </div>
 
+        {/* AI Status Messages */}
         {(aiError || aiStatus) && (
-          <section
-            style={{
-              marginBottom: "2rem",
-              padding: "1rem",
-              borderRadius: "0.75rem",
-              background: "#1e293b",
-              border: "1px solid #334155",
-            }}
-          >
-            {aiError && <p style={{ color: "#fca5a5", margin: 0 }}>❌ {aiError}</p>}
-            {aiStatus && <p style={{ color: "#86efac", margin: 0 }}>✅ {aiStatus}</p>}
-          </section>
+          <div className="mb-6 sm:mb-8">
+            {aiError && (
+              <div className="p-4 rounded-xl bg-red-950/50 border border-red-500/50 flex items-start gap-3">
+                <svg className="w-6 h-6 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-red-200">{aiError}</p>
+              </div>
+            )}
+            {aiStatus && (
+              <div className="p-4 rounded-xl bg-green-950/50 border border-green-500/50 flex items-start gap-3">
+                <svg className="w-6 h-6 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-green-200">{aiStatus}</p>
+              </div>
+            )}
+          </div>
         )}
 
-        <section
-          style={{
-            padding: "1.5rem",
-            borderRadius: "0.75rem",
-            background: "#1e293b",
-            border: "1px solid #334155",
-            marginBottom: "2rem",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: 700,
-              marginBottom: "1.5rem",
-              color: "#f1f5f9",
-            }}
-          >
-            🎯 Your Deck Collection
-          </h2>
+        {/* Decks Collection */}
+        <section className="p-6 sm:p-8 rounded-2xl bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 shadow-xl">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Your Deck Collection</h2>
+              <p className="text-slate-400 text-sm">{decks.length} deck{decks.length !== 1 ? 's' : ''} total</p>
+            </div>
+          </div>
 
           {decks.length === 0 ? (
-            <p style={{ color: "#64748b" }}>
-              No decks yet — create your first one above!
-            </p>
+            <div className="text-center py-12">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-slate-700/50 flex items-center justify-center">
+                <svg className="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+              </div>
+              <p className="text-slate-400 text-lg">No decks yet</p>
+              <p className="text-slate-500 text-sm mt-2">Create your first deck above to get started!</p>
+            </div>
           ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                gap: "1.5rem",
-              }}
-            >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {decks.map((deck) => (
                 <div
                   key={deck.id}
-                  style={{
-                    padding: "1.5rem",
-                    borderRadius: "0.75rem",
-                    background: "#0f172a",
-                    border: "1px solid #334155",
-                  }}
+                  className="group p-6 rounded-xl bg-slate-900/80 border border-slate-700 hover:border-violet-500/50 shadow-lg hover:shadow-violet-500/20 transition-all duration-300 hover:scale-[1.02]"
                 >
-                  <h3 style={{ color: "#f1f5f9", fontWeight: 700 }}>{deck.title}</h3>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">
+                        {deck.title}
+                      </h3>
+                      {deck.description && (
+                        <p className="text-slate-400 text-sm line-clamp-2">{deck.description}</p>
+                      )}
+                    </div>
+                    <div className="ml-3 w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-4 text-sm text-slate-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span>{deck.cards?.length || 0} cards</span>
+                  </div>
 
                   <button
                     onClick={() => handleGenerateFromUpload(deck.id)}
                     disabled={generatingDeckId === deck.id}
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      borderRadius: "0.5rem",
-                      border: "none",
-                      background: generatingDeckId === deck.id ? "#475569" : "#8b5cf6",
-                      color: "white",
-                      fontWeight: 600,
-                      marginTop: "1rem",
-                      cursor: generatingDeckId === deck.id ? "not-allowed" : "pointer",
-                    }}
+                    className="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 disabled:from-slate-700 disabled:to-slate-700 text-white text-sm font-semibold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {generatingDeckId === deck.id ? "🔄 Generating..." : "✨ Generate Cards"}
+                    {generatingDeckId === deck.id ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Generate Cards
+                      </>
+                    )}
                   </button>
                 </div>
               ))}
