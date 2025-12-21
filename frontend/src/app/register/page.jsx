@@ -1,8 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
+
+function cx(...classes) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function Input({ label, hint, className, ...props }) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-end justify-between gap-3">
+        <label className="text-xs font-medium text-slate-200">{label}</label>
+        {hint ? <span className="text-[11px] text-slate-500">{hint}</span> : null}
+      </div>
+      <input
+        {...props}
+        className={cx(
+          "w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100",
+          "outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/15",
+          "placeholder:text-slate-600",
+          className
+        )}
+      />
+    </div>
+  );
+}
+
+function Button({ variant = "primary", loading, className, children, ...props }) {
+  const styles =
+    variant === "primary"
+      ? "bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800"
+      : "bg-slate-900/60 hover:bg-slate-800/70 border border-slate-800";
+
+  return (
+    <button
+      {...props}
+      disabled={props.disabled || loading}
+      className={cx(
+        "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold",
+        "transition disabled:opacity-70 disabled:cursor-not-allowed",
+        styles,
+        className
+      )}
+    >
+      {loading ? (
+        <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
+      ) : null}
+      {children}
+    </button>
+  );
+}
+
+function Alert({ type = "error", title, children }) {
+  const tone =
+    type === "success"
+      ? "border-emerald-500/30 bg-emerald-950/30 text-emerald-100"
+      : type === "info"
+      ? "border-sky-500/30 bg-sky-950/30 text-sky-100"
+      : "border-rose-500/30 bg-rose-950/30 text-rose-100";
+
+  return (
+    <div className={cx("rounded-2xl border px-4 py-3", tone)}>
+      {title ? <div className="text-sm font-semibold">{title}</div> : null}
+      <div className={cx(title ? "mt-1" : "", "text-xs opacity-90")}>{children}</div>
+    </div>
+  );
+}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -11,22 +77,49 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
+
+  const canSubmit = useMemo(() => {
+    const nameOk = fullName.trim().length >= 2;
+    const emailOk = email.trim().includes("@");
+    const passOk = password.length >= 6;
+    return nameOk && emailOk && passOk;
+  }, [fullName, email, password]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
     setInfo("");
+
+    const name = fullName.trim();
+    const mail = email.trim();
+
+    if (name.length < 2) {
+      setError("Full name must be at least 2 characters.");
+      return;
+    }
+    if (!mail.includes("@")) {
+      setError("Please enter a valid email.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: mail,
         password,
         options: {
-          data: { full_name: fullName.trim() },
+          data: { full_name: name },
+          // emailRedirectTo: "http://localhost:3000/login", // optional
         },
       });
 
@@ -35,18 +128,13 @@ export default function RegisterPage() {
         return;
       }
 
-      // حسب إعداد Confirm email في Supabase:
-      // - إذا Confirm email ON => user موجود لكن session = null (لا يوجد token بعد)
-      // - إذا OFF => user + session (تقدر تدخل مباشرة)
-      // (راجع توثيق Supabase) :contentReference[oaicite:3]{index=3}
+      // If email confirmation is ON in Supabase, session may be null until user confirms.
       if (data?.session?.access_token) {
         router.push("/profile");
         return;
       }
 
-      setInfo(
-        "تم إنشاء الحساب. تحقق من بريدك لتأكيد الإيميل، ثم سجّل الدخول."
-      );
+      setInfo("Account created. Please check your email to confirm, then login.");
       router.push("/login");
     } catch (err) {
       setError(err?.message || "Unexpected error during sign up");
@@ -56,131 +144,116 @@ export default function RegisterPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "system-ui, sans-serif",
-        padding: "1rem",
-      }}
-    >
-      <form
-        onSubmit={handleRegister}
-        style={{
-          width: "100%",
-          maxWidth: "400px",
-          padding: "2rem",
-          borderRadius: "1rem",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-          background: "white",
-        }}
-      >
-        <h1 style={{ fontSize: "1.5rem", marginBottom: "1.5rem" }}>
-          Create account
-        </h1>
+    <main className="min-h-screen bg-slate-950 text-slate-50">
+      {/* Background glow */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-sky-500/10 blur-3xl" />
+        <div className="absolute -bottom-24 left-1/3 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl" />
+      </div>
 
-        <label style={{ display: "block", marginBottom: "0.5rem" }}>
-          Full name
-        </label>
-        <input
-          type="text"
-          required
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "0.6rem 0.8rem",
-            borderRadius: "0.5rem",
-            border: "1px solid #ddd",
-            marginBottom: "1rem",
-          }}
-        />
+      <div className="relative mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md">
+          <div className="rounded-3xl border border-slate-800/70 bg-slate-900/40 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+            <div className="border-b border-slate-800/60 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-2xl border border-slate-800 bg-slate-950/40">
+                  <span className="text-sm font-bold tracking-tight">AF</span>
+                </div>
+                <div>
+                  <h1 className="text-lg font-semibold tracking-tight">Create account</h1>
+                  <p className="text-xs text-slate-400">
+                    Sign up to start creating and reviewing flashcards.
+                  </p>
+                </div>
+              </div>
+            </div>
 
-        <label style={{ display: "block", marginBottom: "0.5rem" }}>Email</label>
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "0.6rem 0.8rem",
-            borderRadius: "0.5rem",
-            border: "1px solid #ddd",
-            marginBottom: "1rem",
-          }}
-        />
+            <form onSubmit={handleRegister} className="space-y-4 px-6 py-5">
+              <Input
+                label="Full name"
+                placeholder="e.g., Majid Albadwi"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                autoComplete="name"
+                required
+              />
 
-        <label style={{ display: "block", marginBottom: "0.5rem" }}>
-          Password
-        </label>
-        <input
-          type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "0.6rem 0.8rem",
-            borderRadius: "0.5rem",
-            border: "1px solid #ddd",
-            marginBottom: "1rem",
-          }}
-        />
+              <Input
+                label="Email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                type="email"
+                required
+              />
 
-        {error && (
-          <p style={{ color: "red", marginBottom: "1rem", fontSize: "0.9rem" }}>
-            {error}
-          </p>
-        )}
-        {info && (
-          <p
-            style={{
-              color: "#0f766e",
-              marginBottom: "1rem",
-              fontSize: "0.9rem",
-            }}
-          >
-            {info}
-          </p>
-        )}
+              <div className="space-y-1.5">
+                <div className="flex items-end justify-between gap-3">
+                  <label className="text-xs font-medium text-slate-200">Password</label>
+                  <span className="text-[11px] text-slate-500">min 6 chars</span>
+                </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "0.7rem 1rem",
-            borderRadius: "0.5rem",
-            border: "none",
-            background: "#2563eb",
-            color: "white",
-            fontWeight: 600,
-            cursor: "pointer",
-            marginBottom: "0.75rem",
-            opacity: loading ? 0.7 : 1,
-          }}
-        >
-          {loading ? "Creating account..." : "Sign up"}
-        </button>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
+                    placeholder="••••••••"
+                    className={cx(
+                      "w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 pr-12 text-sm text-slate-100",
+                      "outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/15",
+                      "placeholder:text-slate-600"
+                    )}
+                  />
 
-        <button
-          type="button"
-          onClick={() => router.push("/login")}
-          style={{
-            width: "100%",
-            padding: "0.7rem 1rem",
-            borderRadius: "0.5rem",
-            border: "1px solid #ddd",
-            background: "white",
-            cursor: "pointer",
-          }}
-        >
-          Already have an account? Login
-        </button>
-      </form>
-    </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl border border-slate-800 bg-slate-900/40 px-2.5 py-1 text-[11px] text-slate-300 hover:bg-slate-800/60"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
+
+              {error ? (
+                <Alert type="error" title="Sign up failed">
+                  {error}
+                </Alert>
+              ) : null}
+
+              {info ? (
+                <Alert type="success" title="Success">
+                  {info}
+                </Alert>
+              ) : null}
+
+              <Button type="submit" loading={loading} disabled={!canSubmit}>
+                {loading ? "Creating account…" : "Sign up"}
+              </Button>
+
+              <Button variant="secondary" type="button" disabled={loading} onClick={() => router.push("/login")}>
+                Already have an account? Login
+              </Button>
+
+              <div className="pt-1 text-center text-xs text-slate-500">
+                By signing up you agree to the app usage rules.{" "}
+                <Link href="/" className="text-sky-300 hover:underline">
+                  Back to Home
+                </Link>
+              </div>
+            </form>
+          </div>
+
+          <div className="mt-4 text-center text-[11px] text-slate-600">
+            If email confirmation is enabled in Supabase, you must confirm before login.
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }

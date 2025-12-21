@@ -1,151 +1,340 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
-/**
- * UC-4: Статистика обучения (per user).
- * GET /stats/overview (protected)
- */
+/* ------------------------------ UI helpers ------------------------------ */
+function cx(...classes) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function Spinner() {
+  return (
+    <span
+      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-200/20 border-t-slate-200/80"
+      aria-hidden="true"
+    />
+  );
+}
+
+function Button({ variant = "primary", loading, className, children, ...props }) {
+  const styles =
+    variant === "primary"
+      ? "bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800"
+      : "bg-slate-900/60 hover:bg-slate-800/70 border border-slate-800";
+
+  return (
+    <button
+      {...props}
+      disabled={props.disabled || loading}
+      className={cx(
+        "inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold",
+        "transition disabled:opacity-70 disabled:cursor-not-allowed",
+        styles,
+        className
+      )}
+    >
+      {loading ? <Spinner /> : null}
+      {children}
+    </button>
+  );
+}
+
+function Alert({ type = "error", title, children }) {
+  const tone =
+    type === "success"
+      ? "border-emerald-500/30 bg-emerald-950/30 text-emerald-100"
+      : type === "info"
+      ? "border-sky-500/30 bg-sky-950/30 text-sky-100"
+      : "border-rose-500/30 bg-rose-950/30 text-rose-100";
+
+  return (
+    <div className={cx("rounded-2xl border px-4 py-3", tone)}>
+      {title ? <div className="text-sm font-semibold">{title}</div> : null}
+      <div className={cx(title ? "mt-1" : "", "text-xs opacity-90")}>{children}</div>
+    </div>
+  );
+}
+
+function CardShell({ title, subtitle, right, children }) {
+  return (
+    <section className="rounded-3xl border border-slate-800/70 bg-slate-900/40 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+      <div className="flex flex-col gap-3 border-b border-slate-800/60 px-5 py-4 md:flex-row md:items-start md:justify-between">
+        <div className="space-y-1">
+          <h2 className="text-base md:text-lg font-semibold tracking-tight">{title}</h2>
+          {subtitle ? <p className="text-xs md:text-sm text-slate-400">{subtitle}</p> : null}
+        </div>
+        {right ? <div className="shrink-0">{right}</div> : null}
+      </div>
+      <div className="p-5">{children}</div>
+    </section>
+  );
+}
+
+function StatTile({ label, value, hint }) {
+  return (
+    <div className="rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5">
+      <div className="text-xs text-slate-400">{label}</div>
+      <div className="mt-2 text-3xl font-bold tracking-tight">{value ?? "—"}</div>
+      {hint ? <div className="mt-2 text-[11px] text-slate-500">{hint}</div> : null}
+    </div>
+  );
+}
+
+function SkeletonTile() {
+  return (
+    <div className="h-[118px] w-full animate-pulse rounded-3xl border border-slate-800/70 bg-slate-950/50" />
+  );
+}
+
+function TopNav() {
+  const items = [
+    { href: "/", label: "Home" },
+    { href: "/decks", label: "Decks" },
+    { href: "/review", label: "Review" },
+    { href: "/stats", label: "Stats" },
+    { href: "/profile", label: "Profile" },
+  ];
+
+  return (
+    <div className="sticky top-0 z-40 border-b border-slate-800/60 bg-slate-950/70 backdrop-blur">
+      <div className="mx-auto max-w-6xl px-4 py-3">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-xl border border-slate-800 bg-slate-900/60">
+              <span className="text-sm font-bold tracking-tight">AF</span>
+            </div>
+            <div className="leading-tight">
+              <div className="text-sm font-semibold">Auto-Flashcards</div>
+              <div className="text-xs text-slate-400">Stats • UC-4</div>
+            </div>
+          </div>
+
+          <div className="hidden md:flex items-center gap-1 rounded-2xl border border-slate-800 bg-slate-900/30 p-1">
+            {items.map((it) => (
+              <Link
+                key={it.href}
+                href={it.href}
+                className={cx(
+                  "rounded-xl px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-slate-50 hover:bg-slate-800/60 transition",
+                  it.href === "/stats" && "bg-slate-800/60 text-slate-50"
+                )}
+              >
+                {it.label}
+              </Link>
+            ))}
+          </div>
+
+          <Link
+            href="/profile"
+            className="rounded-2xl border border-slate-800 bg-slate-900/30 px-3 py-2 text-xs text-slate-200 hover:bg-slate-800/60 transition"
+          >
+            Back to profile
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------ API helper ------------------------------ */
+async function apiFetchAuthed(router, path, options = {}) {
+  const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+  if (sessionErr) throw new Error(sessionErr.message);
+
+  const token = sessionData?.session?.access_token;
+  if (!token) {
+    router.push("/login");
+    throw new Error("Unauthorized: please login first.");
+  }
+
+  const headers = new Headers(options.headers || {});
+  headers.set("Authorization", `Bearer ${token}`);
+
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+
+  if (res.status === 401) {
+    router.push("/login");
+    throw new Error("Unauthorized (token missing/expired).");
+  }
+
+  return res;
+}
+
+/* -------------------------------- Page -------------------------------- */
 export default function StatsPage() {
   const router = useRouter();
 
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const apiFetch = async (path, options = {}) => {
-    const { data: sessionData, error: sessionErr } =
-      await supabase.auth.getSession();
-    if (sessionErr) throw new Error(sessionErr.message);
-
-    const token = sessionData?.session?.access_token;
-    if (!token) {
-      router.push("/login");
-      throw new Error("Unauthorized: please login first.");
-    }
-
-    const headers = new Headers(options.headers || {});
-    headers.set("Authorization", `Bearer ${token}`);
-
-    const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-
-    if (res.status === 401) {
-      router.push("/login");
-      throw new Error("Unauthorized (token missing/expired).");
-    }
-
-    return res;
-  };
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     setLoading(true);
     setError("");
 
     try {
-      const res = await apiFetch("/stats/overview", { method: "GET" });
+      const res = await apiFetchAuthed(router, "/stats/overview", { method: "GET" });
       if (!res.ok) {
         const t = await res.text().catch(() => "");
-        throw new Error(`Ошибка загрузки статистики: ${res.status} – ${t}`);
+        throw new Error(`Failed to load stats: ${res.status} ${t ? `– ${t}` : ""}`);
       }
       const data = await res.json();
       setStats(data);
     } catch (err) {
-      console.error(err);
-      setError(err?.message || "Не удалось загрузить статистику.");
       setStats(null);
+      setError(err?.message || "Failed to load stats.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
-    loadStats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    void loadStats();
+  }, [loadStats]);
+
+  const completionHint = useMemo(() => {
+    if (!stats) return null;
+    const total = Number(stats.total_cards || 0);
+    const learned = Number(stats.learned_cards || 0);
+    if (!total) return { pct: 0, text: "Start reviewing to build your stats." };
+    const pct = Math.max(0, Math.min(100, Math.round((learned / total) * 100)));
+    return { pct, text: `${pct}% learned (approx.)` };
+  }, [stats]);
 
   return (
-    <div className="flex justify-center px-4 py-10">
-      <div className="w-full max-w-3xl space-y-6">
-        <header className="space-y-2">
-          <h1 className="text-2xl font-bold">Статистика обучения</h1>
-          <p className="text-sm text-slate-300">
-            Здесь отображается статистика только вашего аккаунта (ваши колоды и карточки).
-          </p>
-        </header>
+    <main className="min-h-screen bg-slate-950 text-slate-50">
+      <TopNav />
 
-        <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-xs text-slate-400">
-              Данные с эндпоинта{" "}
-              <code className="text-sky-400">/stats/overview</code>
-            </div>
-            <button
-              type="button"
-              onClick={loadStats}
-              disabled={loading}
-              className="rounded-lg bg-sky-600 hover:bg-sky-500 disabled:bg-slate-700 disabled:text-slate-400 px-3 py-2 text-xs font-semibold transition-colors"
-            >
-              {loading ? "Обновление..." : "Обновить"}
-            </button>
-          </div>
-
-          {error && (
-            <div className="mt-2 rounded-lg border border-red-700 bg-red-950/40 px-3 py-2 text-xs text-red-200">
-              {error}
-            </div>
-          )}
-
-          {!stats && !error && !loading && (
-            <div className="text-xs text-slate-400">Статистика пока не загружена.</div>
-          )}
-
-          {stats && (
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                <div className="text-xs text-slate-400">Всего колод</div>
-                <div className="text-3xl font-bold mt-1">{stats.total_decks}</div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                <div className="text-xs text-slate-400">Всего карточек</div>
-                <div className="text-3xl font-bold mt-1">{stats.total_cards}</div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                <div className="text-xs text-slate-400">К повторению сегодня</div>
-                <div className="text-3xl font-bold mt-1">{stats.due_today}</div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 space-y-1">
-                <div className="text-xs text-slate-400">
-                  Выученные карточки (repetitions ≥ 3)
-                </div>
-                <div className="text-3xl font-bold">{stats.learned_cards}</div>
-                <div className="text-[10px] text-slate-500">
-                  По этим карточкам было достаточно успешных повторений.
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 md:col-span-2 flex items-center justify-between">
-                <div>
-                  <div className="text-xs text-slate-400">
-                    Карточки, по которым уже были ответы
-                  </div>
-                  <div className="text-3xl font-bold mt-1">{stats.reviewed_cards}</div>
-                </div>
-                <div className="text-[10px] text-slate-500 max-w-[200px] text-right">
-                  Это количество карточек, для которых уже хотя бы один раз была выставлена оценка.
-                </div>
-              </div>
-            </div>
-          )}
-        </section>
+      {/* Background glow */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-sky-500/10 blur-3xl" />
+        <div className="absolute -bottom-24 left-1/3 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
-    </div>
+
+      <div className="relative mx-auto max-w-6xl px-4 py-8 md:py-10 space-y-6">
+        {/* Header */}
+        <div className="rounded-3xl border border-slate-800/70 bg-slate-900/30 p-6 md:p-8">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div className="space-y-1">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                Learning statistics <span className="text-slate-400 text-base">(UC-4)</span>
+              </h1>
+              <p className="text-sm text-slate-300">
+                Overview of your decks, cards, due items, and review progress.
+              </p>
+              <div className="mt-2 text-xs text-slate-500">
+                Endpoint: <span className="text-slate-300">GET {API_BASE}/stats/overview</span>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={loadStats} loading={loading} className="w-auto">
+                Refresh
+              </Button>
+              <Link
+                href="/review"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-2.5 text-sm font-semibold hover:bg-slate-800/70 transition"
+              >
+                Go to Review
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Alerts */}
+        {error ? <Alert type="error" title="Error">{error}</Alert> : null}
+
+        <CardShell
+          title="Overview"
+          subtitle="This data is scoped to your account."
+          right={
+            <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
+              Protected • Bearer token
+            </span>
+          }
+        >
+          {loading ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <SkeletonTile />
+              <SkeletonTile />
+              <SkeletonTile />
+              <SkeletonTile />
+              <div className="md:col-span-2">
+                <SkeletonTile />
+              </div>
+            </div>
+          ) : !stats ? (
+            <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
+              <div className="text-sm font-semibold">No data</div>
+              <div className="mt-1 text-xs text-slate-400">
+                Try refreshing, or complete at least one review session.
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <StatTile label="Total decks" value={stats.total_decks} />
+                <StatTile label="Total cards" value={stats.total_cards} />
+
+                <StatTile
+                  label="Due today"
+                  value={stats.due_today}
+                  hint="Cards scheduled for review now."
+                />
+
+                <StatTile
+                  label="Learned cards"
+                  value={stats.learned_cards}
+                  hint="Heuristic: repetitions ≥ 3"
+                />
+
+                <div className="md:col-span-2 rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="text-xs text-slate-400">Reviewed cards</div>
+                    <div className="mt-2 text-3xl font-bold tracking-tight">{stats.reviewed_cards}</div>
+                    <div className="mt-2 text-[11px] text-slate-500">
+                      Cards that received at least one grade.
+                    </div>
+                  </div>
+
+                  <div className="w-full md:w-[320px]">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500">
+                      <span>Progress</span>
+                      <span className="text-slate-300">{completionHint?.text ?? ""}</span>
+                    </div>
+                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-900/60 border border-slate-800">
+                      <div
+                        className="h-full bg-emerald-500/70"
+                        style={{ width: `${completionHint?.pct ?? 0}%` }}
+                      />
+                    </div>
+                    <div className="mt-2 text-[11px] text-slate-600">
+                      Tip: Keep daily reviews small & consistent.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
+                <div className="text-sm font-semibold">Next step</div>
+                <div className="mt-1 text-xs text-slate-400">
+                  If “Due today” is 0, you can still practice by reviewing another deck or generating new cards.
+                </div>
+              </div>
+            </div>
+          )}
+        </CardShell>
+
+        <footer className="pb-4 text-center text-xs text-slate-600">
+          Stats UI • consistent Tailwind components • App Router navigation
+        </footer>
+      </div>
+    </main>
   );
 }
