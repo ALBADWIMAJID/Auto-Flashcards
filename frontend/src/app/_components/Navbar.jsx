@@ -10,7 +10,6 @@ function cx(...classes) {
 
 const NAV_ITEMS = [
   { href: "/", label: "Главная" },
-  { href: "/decks", label: "" },
   { href: "/review", label: "Повторение" },
   { href: "/stats", label: "Статистика" },
   { href: "/profile", label: "Профиль" },
