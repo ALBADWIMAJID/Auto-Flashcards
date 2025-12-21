@@ -45,3 +45,16 @@ app.include_router(ai.router, prefix="/ai", tags=["ai"])
 app.include_router(decks.router, prefix="/decks", tags=["decks"])
 app.include_router(review.router, prefix="/review", tags=["review"])
 app.include_router(stats.router, prefix="/stats", tags=["stats"])
+
+
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def root():
+    return {"status": "ok", "service": "Auto-Flashcards API"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
