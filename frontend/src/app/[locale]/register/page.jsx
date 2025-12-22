@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import Link from "next-intl/link";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabaseClient";
+import { useRouter } from "next-intl/navigation";
+import { supabase } from "../../lib/supabaseClient";
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -71,6 +72,7 @@ function Alert({ type = "error", title, children }) {
 }
 
 export default function RegisterPage() {
+  const t = useTranslations("register");
   const router = useRouter();
 
   const [fullName, setFullName] = useState("");
@@ -99,15 +101,15 @@ export default function RegisterPage() {
     const mail = email.trim();
 
     if (name.length < 2) {
-      setError("Full name must be at least 2 characters.");
+      setError(t("errors.nameShort"));
       return;
     }
     if (!mail.includes("@")) {
-      setError("Please enter a valid email.");
+      setError(t("errors.invalidEmail"));
       return;
     }
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError(t("errors.passwordShort"));
       return;
     }
 
@@ -119,7 +121,6 @@ export default function RegisterPage() {
         password,
         options: {
           data: { full_name: name },
-          // emailRedirectTo: "http://localhost:3000/login", // optional
         },
       });
 
@@ -128,16 +129,15 @@ export default function RegisterPage() {
         return;
       }
 
-      // If email confirmation is ON in Supabase, session may be null until user confirms.
       if (data?.session?.access_token) {
         router.push("/profile");
         return;
       }
 
-      setInfo("Account created. Please check your email to confirm, then login.");
+      setInfo(t("infoMessage"));
       router.push("/login");
     } catch (err) {
-      setError(err?.message || "Unexpected error during sign up");
+      setError(err?.message || t("errors.unexpected"));
     } finally {
       setLoading(false);
     }
@@ -145,7 +145,6 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50">
-      {/* Background glow */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-sky-500/10 blur-3xl" />
         <div className="absolute -bottom-24 left-1/3 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl" />
@@ -160,18 +159,16 @@ export default function RegisterPage() {
                   <span className="text-sm font-bold tracking-tight">AF</span>
                 </div>
                 <div>
-                  <h1 className="text-lg font-semibold tracking-tight">Create account</h1>
-                  <p className="text-xs text-slate-400">
-                    Sign up to start creating and reviewing flashcards.
-                  </p>
+                  <h1 className="text-lg font-semibold tracking-tight">{t("title")}</h1>
+                  <p className="text-xs text-slate-400">{t("subtitle")}</p>
                 </div>
               </div>
             </div>
 
             <form onSubmit={handleRegister} className="space-y-4 px-6 py-5">
               <Input
-                label="Full name"
-                placeholder="e.g., Majid Albadwi"
+                label={t("fullNameLabel")}
+                placeholder={t("fullNamePlaceholder")}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 autoComplete="name"
@@ -179,8 +176,8 @@ export default function RegisterPage() {
               />
 
               <Input
-                label="Email"
-                placeholder="you@example.com"
+                label={t("emailLabel")}
+                placeholder={t("emailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
@@ -190,8 +187,8 @@ export default function RegisterPage() {
 
               <div className="space-y-1.5">
                 <div className="flex items-end justify-between gap-3">
-                  <label className="text-xs font-medium text-slate-200">Password</label>
-                  <span className="text-[11px] text-slate-500">min 6 chars</span>
+                  <label className="text-xs font-medium text-slate-200">{t("passwordLabel")}</label>
+                  <span className="text-[11px] text-slate-500">{t("passwordHint")}</span>
                 </div>
 
                 <div className="relative">
@@ -201,7 +198,7 @@ export default function RegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="new-password"
-                    placeholder="••••••••"
+                    placeholder={t("passwordPlaceholder")}
                     className={cx(
                       "w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 pr-12 text-sm text-slate-100",
                       "outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/15",
@@ -213,44 +210,44 @@ export default function RegisterPage() {
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl border border-slate-800 bg-slate-900/40 px-2.5 py-1 text-[11px] text-slate-300 hover:bg-slate-800/60"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={showPassword ? t("hidePasswordAria") : t("showPasswordAria")}
                   >
-                    {showPassword ? "Hide" : "Show"}
+                    {showPassword ? t("hide") : t("show")}
                   </button>
                 </div>
               </div>
 
               {error ? (
-                <Alert type="error" title="Sign up failed">
+                <Alert type="error" title={t("errorTitle")}>
                   {error}
                 </Alert>
               ) : null}
 
               {info ? (
-                <Alert type="success" title="Success">
+                <Alert type="success" title={t("infoTitle")}>
                   {info}
                 </Alert>
               ) : null}
 
               <Button type="submit" loading={loading} disabled={!canSubmit}>
-                {loading ? "Creating account…" : "Sign up"}
+                {loading ? t("submitting") : t("submit")}
               </Button>
 
               <Button variant="secondary" type="button" disabled={loading} onClick={() => router.push("/login")}>
-                Already have an account? Login
+                {t("alreadyAccount")}
               </Button>
 
               <div className="pt-1 text-center text-xs text-slate-500">
-                By signing up you agree to the app usage rules.{" "}
+                {t("footer")}{" "}
                 <Link href="/" className="text-sky-300 hover:underline">
-                  Back to Home
+                  {t("backHome")}
                 </Link>
               </div>
             </form>
           </div>
 
           <div className="mt-4 text-center text-[11px] text-slate-600">
-            If email confirmation is enabled in Supabase, you must confirm before login.
+            {t("confirmationNote")}
           </div>
         </div>
       </div>

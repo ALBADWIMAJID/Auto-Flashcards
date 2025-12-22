@@ -1,11 +1,13 @@
 // frontend/src/app/login/page.js
 "use client";
 
+import { useTranslations } from "next-intl";
+import { useRouter } from "next-intl/navigation";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../../lib/supabaseClient";
 
 export default function LoginPage() {
+  const t = useTranslations("login");
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -32,18 +34,16 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative overflow-hidden">
-      {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 -left-10 sm:-left-20 w-48 sm:w-72 h-48 sm:h-72 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 -right-10 sm:-right-20 w-64 sm:w-96 h-64 sm:h-96 bg-sky-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div
+          className="absolute bottom-1/4 -right-10 sm:-right-20 w-64 sm:w-96 h-64 sm:h-96 bg-sky-500/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
       </div>
 
-      <form
-        onSubmit={handleLogin}
-        className="w-full max-w-md relative z-10"
-      >
+      <form onSubmit={handleLogin} className="w-full max-w-md relative z-10">
         <div className="rounded-2xl border border-slate-700/50 bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-2xl hover:border-slate-600/50 transition-all duration-300">
-          {/* Logo/Icon area */}
           <div className="flex justify-center mb-4 sm:mb-6">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-sky-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
               <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,16 +53,13 @@ export default function LoginPage() {
           </div>
 
           <h1 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2 text-center bg-gradient-to-r from-emerald-400 to-sky-400 bg-clip-text text-transparent">
-            Welcome Back
+            {t("title")}
           </h1>
-          <p className="text-slate-400 text-xs sm:text-sm text-center mb-6 sm:mb-8">
-            Login to Auto-Flashcards
-          </p>
+          <p className="text-slate-400 text-xs sm:text-sm text-center mb-6 sm:mb-8">{t("subtitle")}</p>
 
-          {/* Email Input */}
           <div className="mb-4 sm:mb-5">
             <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">
-              Email Address
+              {t("emailLabel")}
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -75,16 +72,15 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder={t("emailPlaceholder")}
                 className="w-full rounded-xl border border-slate-700 bg-slate-950/50 pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm text-slate-50 placeholder-slate-500 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
               />
             </div>
           </div>
 
-          {/* Password Input */}
           <div className="mb-5 sm:mb-6">
             <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">
-              Password
+              {t("passwordLabel")}
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -97,13 +93,12 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder={t("passwordPlaceholder")}
                 className="w-full rounded-xl border border-slate-700 bg-slate-950/50 pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm text-slate-50 placeholder-slate-500 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
               />
             </div>
           </div>
 
-          {/* Error Message */}
           {errorMsg && (
             <div className="mb-5 sm:mb-6 rounded-xl border border-red-500/50 bg-red-950/50 backdrop-blur-sm px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-red-200 flex items-start gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
               <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,7 +108,6 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Login Button */}
           <button
             type="submit"
             disabled={loading}
@@ -125,11 +119,11 @@ export default function LoginPage() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>Logging in...</span>
+                <span>{t("loggingIn")}</span>
               </>
             ) : (
               <>
-                <span>Login</span>
+                <span>{t("loginButton")}</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -137,30 +131,25 @@ export default function LoginPage() {
             )}
           </button>
 
-          {/* Divider */}
           <div className="relative my-5 sm:my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-slate-700/50"></div>
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-slate-900 px-3 text-slate-500">or</span>
+              <span className="bg-slate-900 px-3 text-slate-500">{t("or")}</span>
             </div>
           </div>
 
-          {/* Register Button */}
           <button
             type="button"
             onClick={() => router.push("/register")}
             className="w-full rounded-xl border border-slate-700 bg-slate-950/30 hover:bg-slate-800/50 hover:border-slate-600 px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium text-slate-300 hover:text-slate-100 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
           >
-            Create new account
+            {t("createAccount")}
           </button>
         </div>
 
-        {/* Footer text */}
-        <p className="text-center text-xs text-slate-500 mt-4 sm:mt-6 px-4">
-          By continuing, you agree to our Terms of Service and Privacy Policy
-        </p>
+        <p className="text-center text-xs text-slate-500 mt-4 sm:mt-6 px-4">{t("footer")}</p>
       </form>
     </div>
   );

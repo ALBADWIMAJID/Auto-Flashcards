@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import Link from "next-intl/link";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "./lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
@@ -206,7 +207,7 @@ function Textarea(props) {
   );
 }
 
-function Toast({ toast, onClose }) {
+function Toast({ toast, onClose, closeLabel }) {
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(onClose, 2600);
@@ -234,7 +235,7 @@ function Toast({ toast, onClose }) {
             onClick={onClose}
             className="rounded-xl px-2 py-1 text-xs opacity-80 hover:opacity-100 hover:bg-white/5"
           >
-            Close
+            {closeLabel}
           </button>
         </div>
       </div>
@@ -257,24 +258,22 @@ function SkeletonList() {
 
 /* --------------------------------- Page ----------------------------------- */
 export default function HomePage() {
-  // --- Auth state ---
+  const t = useTranslations("landing");
+
   const [user, setUser] = useState(null);
   const isAuthed = useMemo(() => Boolean(user?.id), [user]);
 
-  // --- Toast ---
   const [toast, setToast] = useState(null);
   const pushToast = useCallback((type, title, message) => {
     setToast({ type, title, message, id: Date.now() });
   }, []);
 
-  // --- AI ---
   const [text, setText] = useState("");
   const [cards, setCards] = useState([]);
   const [maxCards, setMaxCards] = useState(5);
   const [loadingAI, setLoadingAI] = useState(false);
   const [errorAI, setErrorAI] = useState("");
 
-  // --- Decks ---
   const [decks, setDecks] = useState([]);
   const [deckTitle, setDeckTitle] = useState("");
   const [deckDescription, setDeckDescription] = useState("");
@@ -291,22 +290,23 @@ export default function HomePage() {
 
       if (response.status === 401) {
         setDecks([]);
-        throw new Error("Unauthorized (401). Please sign in again.");
+        throw new Error(t("messages.unauthorized"));
       }
 
       if (!response.ok) {
-        throw new Error(`Failed to load decks: ${response.status}`);
+        throw new Error(t("messages.loadDecksError", { status: response.status }));
       }
 
       const data = await response.json();
       setDecks(Array.isArray(data) ? data : []);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Unknown error while loading decks.";
+      const fallback = t("messages.unknownLoadDecks");
+      const msg = e instanceof Error ? e.message : fallback;
       setErrorDecks(msg);
     } finally {
       setLoadingDecks(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     let mounted = true;
@@ -338,9 +338,9 @@ export default function HomePage() {
     setErrorDecks("");
 
     if (!isAuthed) {
-      const msg = "Please sign in before creating a deck.";
+      const msg = t("messages.signInRequired");
       setErrorDecks(msg);
-      pushToast("warning", "Sign in required", msg);
+      pushToast("warning", t("toasts.signInRequiredTitle"), msg);
       return;
     }
 
@@ -348,9 +348,9 @@ export default function HomePage() {
     const description = (deckDescription || "").trim();
 
     if (!title) {
-      const msg = "Deck title is required.";
+      const msg = t("messages.missingTitle");
       setErrorDecks(msg);
-      pushToast("warning", "Missing title", msg);
+      pushToast("warning", t("toasts.missingTitleTitle"), msg);
       return;
     }
 
@@ -364,21 +364,22 @@ export default function HomePage() {
         }),
       });
 
-      if (response.status === 401) throw new Error("Unauthorized (401). Please sign in again.");
+      if (response.status === 401) throw new Error(t("messages.unauthorized"));
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.detail || `Failed to create deck: ${response.status}`);
+        throw new Error(data.detail || t("messages.createDeckError", { status: response.status }));
       }
 
       setDeckTitle("");
       setDeckDescription("");
-      pushToast("success", "Deck created", `"${title}" has been created.`);
+      pushToast("success", t("toasts.deckCreatedTitle"), t("toasts.deckCreatedMessage", { title }));
       await loadDecks();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Unknown error while creating deck.";
+      const fallback = t("messages.unknownCreateDeck");
+      const msg = e instanceof Error ? e.message : fallback;
       setErrorDecks(msg);
-      pushToast("error", "Create failed", msg);
+      pushToast("error", t("toasts.createFailedTitle"), msg);
     } finally {
       setCreatingDeck(false);
     }
@@ -390,9 +391,9 @@ export default function HomePage() {
 
     const trimmed = text.trim();
     if (!trimmed) {
-      const msg = "Please paste a study text first.";
+      const msg = t("messages.missingText");
       setErrorAI(msg);
-      pushToast("warning", "Missing text", msg);
+      pushToast("warning", t("toasts.missingTextTitle"), msg);
       return;
     }
 
@@ -409,7 +410,7 @@ export default function HomePage() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.detail || `AI request failed: ${response.status}`);
+        throw new Error(data.detail || t("messages.aiFailed", { status: response.status }));
       }
 
       const data = await response.json();
@@ -418,13 +419,14 @@ export default function HomePage() {
 
       pushToast(
         "success",
-        "Cards generated",
-        list.length ? `Generated ${list.length} cards.` : "No cards were generated."
+        t("toasts.cardsGeneratedTitle"),
+        list.length ? t("toasts.cardsGeneratedMessage", { count: list.length }) : t("toasts.cardsGeneratedEmpty")
       );
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Unknown error while generating.";
+      const fallback = t("messages.unknownGenerate");
+      const msg = e instanceof Error ? e.message : fallback;
       setErrorAI(msg);
-      pushToast("error", "Generation failed", msg);
+      pushToast("error", t("toasts.generationFailedTitle"), msg);
     } finally {
       setLoadingAI(false);
     }
@@ -438,7 +440,6 @@ export default function HomePage() {
 
   return (
     <div className="space-y-10">
-      {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/40 p-6 md:p-10">
         <div aria-hidden="true" className="absolute inset-0">
           <div className="absolute -top-24 right-8 h-56 w-56 rounded-full bg-sky-500/10 blur-3xl" />
@@ -448,52 +449,47 @@ export default function HomePage() {
         <div className="relative grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-5">
             <div className="flex flex-wrap gap-2">
-              <Badge tone="info">AI generator</Badge>
-              <Badge tone="success">SM-2 review</Badge>
-              <Badge>Fast setup</Badge>
+              <Badge tone="info">{t("badges.ai")}</Badge>
+              <Badge tone="success">{t("badges.sm2")}</Badge>
+              <Badge>{t("badges.fast")}</Badge>
             </div>
 
             <div className="space-y-3">
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-                Turn notes into review-ready flashcards.
-              </h1>
-              <p className="text-sm md:text-base text-slate-300">
-                Create decks in minutes, generate cards with AI, and review with spaced repetition to
-                retain more with less time.
-              </p>
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{t("hero.title")}</h1>
+              <p className="text-sm md:text-base text-slate-300">{t("hero.subtitle")}</p>
             </div>
 
             <div className="flex flex-wrap gap-3">
               <ButtonLink href="/register" variant="primary">
-                Get started free
+                {t("hero.ctaPrimary")}
               </ButtonLink>
               <ButtonLink href="#quickstart" variant="secondary">
-                Try it now
+                {t("hero.ctaSecondary")}
               </ButtonLink>
               {isAuthed ? (
                 <ButtonLink href="/review" variant="ghost">
-                  Continue review
+                  {t("hero.ctaReview")}
                 </ButtonLink>
               ) : (
                 <ButtonLink href="/login" variant="ghost">
-                  Sign in
+                  {t("hero.ctaSignin")}
                 </ButtonLink>
               )}
             </div>
 
             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
               <span>
-                API: <span className="text-slate-200">{API_BASE_URL}</span>
+                {t("hero.apiLabel")}: <span className="text-slate-200">{API_BASE_URL}</span>
               </span>
               <span className="h-1 w-1 rounded-full bg-slate-600" />
-              <span>{isAuthed ? `Signed in as ${userLabel}` : "Not signed in"}</span>
+              <span>{isAuthed ? t("hero.signedInAs", { user: userLabel }) : t("hero.signedOut")}</span>
             </div>
           </div>
 
           <div className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-5 md:p-6">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold">Quick start</div>
-              <Badge tone="warn">3 min setup</Badge>
+              <div className="text-sm font-semibold">{t("quickStart.title")}</div>
+              <Badge tone="warn">{t("quickStart.badge")}</Badge>
             </div>
             <div className="mt-4 space-y-3">
               <div className="flex items-start gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/40 p-3">
@@ -501,8 +497,8 @@ export default function HomePage() {
                   1
                 </span>
                 <div>
-                  <div className="text-sm font-semibold">Create an account</div>
-                  <div className="text-xs text-slate-400">Unlock decks, stats, and reviews.</div>
+                  <div className="text-sm font-semibold">{t("quickStart.steps.oneTitle")}</div>
+                  <div className="text-xs text-slate-400">{t("quickStart.steps.oneDesc")}</div>
                 </div>
               </div>
               <div className="flex items-start gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/40 p-3">
@@ -510,8 +506,8 @@ export default function HomePage() {
                   2
                 </span>
                 <div>
-                  <div className="text-sm font-semibold">Generate cards</div>
-                  <div className="text-xs text-slate-400">Paste notes and pick 1-20 cards.</div>
+                  <div className="text-sm font-semibold">{t("quickStart.steps.twoTitle")}</div>
+                  <div className="text-xs text-slate-400">{t("quickStart.steps.twoDesc")}</div>
                 </div>
               </div>
               <div className="flex items-start gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/40 p-3">
@@ -519,98 +515,82 @@ export default function HomePage() {
                   3
                 </span>
                 <div>
-                  <div className="text-sm font-semibold">Review daily</div>
-                  <div className="text-xs text-slate-400">Grade recall and build streaks.</div>
+                  <div className="text-sm font-semibold">{t("quickStart.steps.threeTitle")}</div>
+                  <div className="text-xs text-slate-400">{t("quickStart.steps.threeDesc")}</div>
                 </div>
               </div>
             </div>
             <div className="mt-5 grid gap-2 sm:grid-cols-2">
               <ButtonLink href="/register" variant="primary">
-                Create account
+                {t("quickStart.ctaPrimary")}
               </ButtonLink>
               <ButtonLink href="#quickstart" variant="secondary">
-                Open quick start
+                {t("quickStart.ctaSecondary")}
               </ButtonLink>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How it works */}
       <section id="how-it-works" className="space-y-5">
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div className="space-y-1">
-            <h2 className="text-xl md:text-2xl font-semibold tracking-tight">How it works</h2>
-            <p className="text-sm text-slate-400">
-              A simple flow to turn material into long-term memory.
-            </p>
+            <h2 className="text-xl md:text-2xl font-semibold tracking-tight">{t("howItWorks.title")}</h2>
+            <p className="text-sm text-slate-400">{t("howItWorks.subtitle")}</p>
           </div>
           <ButtonLink href="/register" variant="secondary">
-            Start now
+            {t("howItWorks.cta")}
           </ButtonLink>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StepCard
             step="01"
-            title="Sign up"
-            description="Create an account to unlock decks and progress."
+            title={t("howItWorks.steps.oneTitle")}
+            description={t("howItWorks.steps.oneDesc")}
             href="/register"
-            cta="Create account"
+            cta={t("howItWorks.steps.oneCta")}
           />
           <StepCard
             step="02"
-            title="Add notes"
-            description="Paste text or upload files from your study material."
+            title={t("howItWorks.steps.twoTitle")}
+            description={t("howItWorks.steps.twoDesc")}
             href="#quickstart"
-            cta="Try generator"
+            cta={t("howItWorks.steps.twoCta")}
           />
           <StepCard
             step="03"
-            title="Build decks"
-            description="Organize flashcards into decks by topic or class."
+            title={t("howItWorks.steps.threeTitle")}
+            description={t("howItWorks.steps.threeDesc")}
             href="/profile"
-            cta="Manage decks"
+            cta={t("howItWorks.steps.threeCta")}
           />
           <StepCard
             step="04"
-            title="Review"
-            description="Grade your recall and follow SM-2 scheduling."
+            title={t("howItWorks.steps.fourTitle")}
+            description={t("howItWorks.steps.fourDesc")}
             href="/review"
-            cta="Start review"
+            cta={t("howItWorks.steps.fourCta")}
           />
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <FeatureCard
-            title="AI card generation"
-            description="Create Q/A cards from raw notes in minutes."
-          />
-          <FeatureCard
-            title="Spaced repetition"
-            description="Review with proven SM-2 scheduling for retention."
-          />
-          <FeatureCard
-            title="Progress tracking"
-            description="See what is due, learned, and reviewed over time."
-          />
+          <FeatureCard title={t("features.aiTitle")} description={t("features.aiDesc")} />
+          <FeatureCard title={t("features.spacedTitle")} description={t("features.spacedDesc")} />
+          <FeatureCard title={t("features.progressTitle")} description={t("features.progressDesc")} />
         </div>
       </section>
 
-      {/* Quick start */}
       <section id="quickstart" className="space-y-6">
         <div className="space-y-2">
-          <h2 className="text-xl md:text-2xl font-semibold tracking-tight">Quick start lab</h2>
-          <p className="text-sm text-slate-400">
-            Generate flashcards and create your first deck in the same place.
-          </p>
+          <h2 className="text-xl md:text-2xl font-semibold tracking-tight">{t("lab.title")}</h2>
+          <p className="text-sm text-slate-400">{t("lab.subtitle")}</p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* AI */}
           <CardShell
-            title="AI card generator"
-            subtitle="Paste a study text, choose the number of cards, and generate Q/A."
+            title={t("generator.title")}
+            subtitle={t("generator.subtitle")}
             right={
               <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
                 POST <span className="text-slate-200">/ai/generate</span>
@@ -618,18 +598,18 @@ export default function HomePage() {
             }
           >
             <div className="space-y-4">
-              <Field label="Study text" hint="Try 2-5 paragraphs">
+              <Field label={t("generator.studyLabel")} hint={t("generator.studyHint")}>
                 <Textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   rows={6}
-                  placeholder="Paste your lecture notes here."
+                  placeholder={t("generator.studyPlaceholder")}
                 />
               </Field>
 
               <div className="flex flex-col gap-3 md:flex-row md:items-end">
                 <div className="w-full md:w-40">
-                  <Field label="Max cards" hint="1-20">
+                  <Field label={t("generator.maxLabel")} hint={t("generator.maxHint")}>
                     <Input
                       type="number"
                       min={1}
@@ -641,7 +621,7 @@ export default function HomePage() {
                 </div>
 
                 <Button onClick={handleGenerate} loading={loadingAI} className="w-full md:w-auto">
-                  {loadingAI ? "Generating..." : "Generate cards"}
+                  {loadingAI ? t("generator.generating") : t("generator.generate")}
                 </Button>
 
                 <Button
@@ -651,16 +631,16 @@ export default function HomePage() {
                     setText("");
                     setCards([]);
                     setErrorAI("");
-                    pushToast("success", "Cleared", "Text and results cleared.");
+                    pushToast("success", t("toasts.clearedTitle"), t("toasts.clearedMessage"));
                   }}
                 >
-                  Clear
+                  {t("generator.clear")}
                 </Button>
               </div>
 
               {errorAI ? (
                 <div className="rounded-2xl border border-rose-500/30 bg-rose-950/30 px-4 py-3 text-sm text-rose-100">
-                  <div className="font-semibold">Error</div>
+                  <div className="font-semibold">{t("generator.errorTitle")}</div>
                   <div className="mt-1 text-xs opacity-90">{errorAI}</div>
                 </div>
               ) : null}
@@ -682,9 +662,9 @@ export default function HomePage() {
                       className="rounded-2xl border border-slate-800/70 bg-slate-950/50 p-4"
                     >
                       <div className="flex items-start justify-between gap-4">
-                        <div className="text-xs text-slate-400">Card {i + 1}</div>
+                        <div className="text-xs text-slate-400">{t("generator.cardLabel", { index: i + 1 })}</div>
                         <span className="rounded-full border border-slate-800 bg-slate-900/40 px-2 py-0.5 text-[11px] text-slate-400">
-                          Q/A
+                          {t("generator.qa")}
                         </span>
                       </div>
                       <div className="mt-2 text-sm font-semibold text-slate-50">{c.question}</div>
@@ -694,19 +674,20 @@ export default function HomePage() {
                 </div>
               ) : (
                 <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
-                  <div className="text-sm font-semibold">No results yet</div>
+                  <div className="text-sm font-semibold">{t("generator.noResultsTitle")}</div>
                   <div className="mt-1 text-xs text-slate-400">
-                    Paste text and click <span className="text-slate-200">Generate cards</span>.
+                    {t.rich("generator.noResultsHint", {
+                      strong: (chunks) => <span className="text-slate-200">{chunks}</span>,
+                    })}
                   </div>
                 </div>
               )}
             </div>
           </CardShell>
 
-          {/* Decks */}
           <CardShell
-            title="Your decks"
-            subtitle="Create a deck and view your list. Save cards after you sign in."
+            title={t("decks.title")}
+            subtitle={t("decks.subtitle")}
             right={
               <div className="flex items-center gap-2">
                 <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
@@ -717,28 +698,31 @@ export default function HomePage() {
                   onClick={() =>
                     isAuthed
                       ? loadDecks()
-                      : pushToast("warning", "Sign in required", "Please sign in first.")
+                      : pushToast("warning", t("toasts.signInRequiredTitle"), t("messages.signInRequired"))
                   }
                   loading={loadingDecks}
                 >
-                  Reload
+                  {t("decks.reload")}
                 </Button>
               </div>
             }
           >
             {!isAuthed ? (
               <div className="rounded-2xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-sm text-amber-100">
-                <div className="font-semibold">Sign in to save decks</div>
+                <div className="font-semibold">{t("decks.notSignedTitle")}</div>
                 <div className="mt-1 text-xs opacity-90">
-                  Go to{" "}
-                  <Link className="text-amber-200 hover:underline" href="/login">
-                    Login
-                  </Link>{" "}
-                  or{" "}
-                  <Link className="text-amber-200 hover:underline" href="/register">
-                    Create account
-                  </Link>
-                  .
+                  {t.rich("decks.notSignedHint", {
+                    login: (chunks) => (
+                      <Link className="text-amber-200 hover:underline" href="/login">
+                        {chunks}
+                      </Link>
+                    ),
+                    register: (chunks) => (
+                      <Link className="text-amber-200 hover:underline" href="/register">
+                        {chunks}
+                      </Link>
+                    ),
+                  })}
                 </div>
               </div>
             ) : null}
@@ -746,24 +730,24 @@ export default function HomePage() {
             <div className="mt-4 grid gap-6 md:grid-cols-2">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold">Create deck</h3>
-                  <span className="text-[11px] text-slate-500">Title required</span>
+                  <h3 className="text-sm font-semibold">{t("decks.createTitle")}</h3>
+                  <span className="text-[11px] text-slate-500">{t("decks.titleRequired")}</span>
                 </div>
 
-                <Field label="Title">
+                <Field label={t("decks.titleLabel")}>
                   <Input
                     value={deckTitle}
                     onChange={(e) => setDeckTitle(e.target.value)}
-                    placeholder="e.g., Data Structures - Week 3"
+                    placeholder={t("decks.titlePlaceholder")}
                   />
                 </Field>
 
-                <Field label="Description" hint="Optional">
+                <Field label={t("decks.descriptionLabel")} hint={t("decks.descriptionHint")}>
                   <Textarea
                     value={deckDescription}
                     onChange={(e) => setDeckDescription(e.target.value)}
                     rows={3}
-                    placeholder="Short description."
+                    placeholder={t("decks.descriptionPlaceholder")}
                   />
                 </Field>
 
@@ -780,15 +764,15 @@ export default function HomePage() {
                   disabled={!isAuthed}
                   className="w-full"
                 >
-                  {creatingDeck ? "Creating..." : "Create deck"}
+                  {creatingDeck ? t("decks.creatingButton") : t("decks.createButton")}
                 </Button>
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold">Deck list</h3>
+                  <h3 className="text-sm font-semibold">{t("decks.listTitle")}</h3>
                   <span className="text-[11px] text-slate-500">
-                    {isAuthed ? `${decks.length} total` : ""}
+                    {isAuthed ? t("decks.totalCount", { count: decks.length }) : ""}
                   </span>
                 </div>
 
@@ -805,14 +789,16 @@ export default function HomePage() {
                           <div>
                             <div className="text-sm font-semibold">{d.title}</div>
                             <div className="mt-1 text-[11px] text-slate-500">
-                              ID: <span className="text-slate-300">{truncateMiddle(String(d.id), 8, 8)}</span>
+                              {t("decks.idLabel", {
+                                id: truncateMiddle(String(d.id), 8, 8),
+                              })}
                             </div>
                           </div>
                           <Link
                             href="/profile"
                             className="rounded-xl border border-slate-800 bg-slate-900/30 px-2.5 py-1 text-[11px] text-slate-300 opacity-0 group-hover:opacity-100 transition hover:bg-slate-800/60"
                           >
-                            Manage
+                            {t("decks.manage")}
                           </Link>
                         </div>
                       </div>
@@ -820,10 +806,8 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
-                    <div className="text-sm font-semibold">No decks yet</div>
-                    <div className="mt-1 text-xs text-slate-400">
-                      Create your first deck on the left.
-                    </div>
+                    <div className="text-sm font-semibold">{t("decks.noDecksTitle")}</div>
+                    <div className="mt-1 text-xs text-slate-400">{t("decks.noDecksHint")}</div>
                   </div>
                 )}
               </div>
@@ -832,33 +816,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
       <section className="rounded-3xl border border-slate-800/70 bg-slate-900/40 p-6 md:p-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-1">
-            <h2 className="text-xl md:text-2xl font-semibold tracking-tight">
-              Ready to build your first deck?
-            </h2>
-            <p className="text-sm text-slate-400">
-              Start free, create your first deck, and review today.
-            </p>
+            <h2 className="text-xl md:text-2xl font-semibold tracking-tight">{t("cta.title")}</h2>
+            <p className="text-sm text-slate-400">{t("cta.subtitle")}</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <ButtonLink href="/register" variant="primary">
-              Create account
+              {t("cta.primary")}
             </ButtonLink>
             <ButtonLink href="/review" variant="secondary">
-              Go to review
+              {t("cta.secondary")}
             </ButtonLink>
           </div>
         </div>
       </section>
 
-      <footer className="pb-4 text-center text-xs text-slate-500">
-        Auto-Flashcards - AI flashcards and spaced repetition workflow.
-      </footer>
+      <footer className="pb-4 text-center text-xs text-slate-500">{t("footer")}</footer>
 
-      <Toast toast={toast} onClose={() => setToast(null)} />
+      <Toast toast={toast} onClose={() => setToast(null)} closeLabel={t("toast.close")} />
     </div>
   );
 }

@@ -1,0 +1,380 @@
+{
+  "nav": {
+    "brand": "Auto-Flashcards",
+    "tagline": "CodeX Team Project",
+    "home": "Home",
+    "review": "Review",
+    "stats": "Stats",
+    "profile": "Profile",
+    "login": "Login",
+    "getStarted": "Get started",
+    "menu": "Menu",
+    "openMenu": "Open menu",
+    "language": "Language"
+  },
+  "layout": {
+    "footerLeft": "Auto-Flashcards MVP",
+    "footerRight": "Next.js + FastAPI + Supabase + OpenAI"
+  },
+  "landing": {
+    "badges": {
+      "ai": "AI generator",
+      "sm2": "SM-2 review",
+      "fast": "Fast setup"
+    },
+    "hero": {
+      "title": "Turn notes into review-ready flashcards.",
+      "subtitle": "Create decks in minutes, generate cards with AI, and review with spaced repetition to retain more with less time.",
+      "ctaPrimary": "Get started free",
+      "ctaSecondary": "Try it now",
+      "ctaReview": "Continue review",
+      "ctaSignin": "Sign in",
+      "apiLabel": "API",
+      "signedInAs": "Signed in as {user}",
+      "signedOut": "Not signed in"
+    },
+    "quickStart": {
+      "title": "Quick start",
+      "badge": "3 min setup",
+      "steps": {
+        "oneTitle": "Create an account",
+        "oneDesc": "Unlock decks, stats, and reviews.",
+        "twoTitle": "Generate cards",
+        "twoDesc": "Paste notes and pick 1-20 cards.",
+        "threeTitle": "Review daily",
+        "threeDesc": "Grade recall and build streaks."
+      },
+      "ctaPrimary": "Create account",
+      "ctaSecondary": "Open quick start"
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "subtitle": "A simple flow to turn material into long-term memory.",
+      "cta": "Start now",
+      "steps": {
+        "oneTitle": "Sign up",
+        "oneDesc": "Create an account to unlock decks and progress.",
+        "oneCta": "Create account",
+        "twoTitle": "Add notes",
+        "twoDesc": "Paste text or upload files from your study material.",
+        "twoCta": "Try generator",
+        "threeTitle": "Build decks",
+        "threeDesc": "Organize flashcards into decks by topic or class.",
+        "threeCta": "Manage decks",
+        "fourTitle": "Review",
+        "fourDesc": "Grade your recall and follow SM-2 scheduling.",
+        "fourCta": "Start review"
+      }
+    },
+    "features": {
+      "aiTitle": "AI card generation",
+      "aiDesc": "Create Q/A cards from raw notes in minutes.",
+      "spacedTitle": "Spaced repetition",
+      "spacedDesc": "Review with proven SM-2 scheduling for retention.",
+      "progressTitle": "Progress tracking",
+      "progressDesc": "See what is due, learned, and reviewed over time."
+    },
+    "lab": {
+      "title": "Quick start lab",
+      "subtitle": "Generate flashcards and create your first deck in the same place."
+    },
+    "generator": {
+      "title": "AI card generator",
+      "subtitle": "Paste a study text, choose the number of cards, and generate Q/A.",
+      "studyLabel": "Study text",
+      "studyHint": "Try 2-5 paragraphs",
+      "studyPlaceholder": "Paste your lecture notes here.",
+      "maxLabel": "Max cards",
+      "maxHint": "1-20",
+      "generate": "Generate cards",
+      "generating": "Generating...",
+      "clear": "Clear",
+      "errorTitle": "Error",
+      "cardLabel": "Card {index}",
+      "qa": "Q/A",
+      "noResultsTitle": "No results yet",
+      "noResultsHint": "Paste text and click <strong>Generate cards</strong>."
+    },
+    "decks": {
+      "title": "Your decks",
+      "subtitle": "Create a deck and view your list. Save cards after you sign in.",
+      "reload": "Reload",
+      "notSignedTitle": "Sign in to save decks",
+      "notSignedHint": "Go to <login>Login</login> or <register>Create account</register>.",
+      "createTitle": "Create deck",
+      "titleRequired": "Title required",
+      "titleLabel": "Title",
+      "titlePlaceholder": "e.g., Data Structures - Week 3",
+      "descriptionLabel": "Description",
+      "descriptionHint": "Optional",
+      "descriptionPlaceholder": "Short description.",
+      "createButton": "Create deck",
+      "creatingButton": "Creating...",
+      "listTitle": "Deck list",
+      "totalCount": "{count} total",
+      "noDecksTitle": "No decks yet",
+      "noDecksHint": "Create your first deck on the left.",
+      "manage": "Manage",
+      "idLabel": "ID: {id}"
+    },
+    "cta": {
+      "title": "Ready to build your first deck?",
+      "subtitle": "Start free, create your first deck, and review today.",
+      "primary": "Create account",
+      "secondary": "Go to review"
+    },
+    "footer": "Auto-Flashcards - AI flashcards and spaced repetition workflow.",
+    "toast": {
+      "close": "Close"
+    },
+    "messages": {
+      "unauthorized": "Unauthorized (401). Please sign in again.",
+      "loadDecksError": "Failed to load decks: {status}",
+      "unknownLoadDecks": "Unknown error while loading decks.",
+      "signInRequired": "Please sign in before creating a deck.",
+      "missingTitle": "Deck title is required.",
+      "createDeckError": "Failed to create deck: {status}",
+      "unknownCreateDeck": "Unknown error while creating deck.",
+      "missingText": "Please paste a study text first.",
+      "aiFailed": "AI request failed: {status}",
+      "unknownGenerate": "Unknown error while generating."
+    },
+    "toasts": {
+      "signInRequiredTitle": "Sign in required",
+      "missingTitleTitle": "Missing title",
+      "deckCreatedTitle": "Deck created",
+      "deckCreatedMessage": "\"{title}\" has been created.",
+      "createFailedTitle": "Create failed",
+      "missingTextTitle": "Missing text",
+      "cardsGeneratedTitle": "Cards generated",
+      "cardsGeneratedMessage": "Generated {count} cards.",
+      "cardsGeneratedEmpty": "No cards were generated.",
+      "generationFailedTitle": "Generation failed",
+      "clearedTitle": "Cleared",
+      "clearedMessage": "Text and results cleared."
+    }
+  },
+  "review": {
+    "header": {
+      "title": "Review mode",
+      "subtitle": "Select a deck, flip the card, then grade your recall (SM-2). Keep runs short and focused.",
+      "apiLabel": "API",
+      "authRequired": "Auth required"
+    },
+    "actions": {
+      "reloadDecks": "Reload decks",
+      "loadNext": "Load next",
+      "refresh": "Refresh current",
+      "nextCard": "Next card"
+    },
+    "alerts": {
+      "errorTitle": "Error",
+      "infoTitle": "Info"
+    },
+    "deck": {
+      "title": "Choose a deck",
+      "subtitle": "Your review session will use due cards from the selected deck.",
+      "emptyTitle": "No decks found",
+      "emptyHint": "Create a deck first from <profile>Profile</profile>.",
+      "availableLabel": "Available decks",
+      "totalCount": "{count} total",
+      "tipTitle": "Tip",
+      "tipBody": "Click <strong>Show answer</strong>, then pick Again / Hard / Good / Easy. If unsure, lean on <strong>Good</strong> to keep momentum."
+    },
+    "card": {
+      "title": "Current card",
+      "subtitle": "Question first, then reveal the answer, then grade your recall.",
+      "emptyTitle": "No active card",
+      "emptyHintWithDeck": "Try loading next card.",
+      "emptyHintNoDeck": "Select a deck first.",
+      "questionLabel": "Question",
+      "showAnswer": "Show answer",
+      "hideAnswer": "Hide answer",
+      "revealHint": "Reveal the answer when you're ready.",
+      "deckLabel": "Deck: {deck}",
+      "cardLabel": "Card: {id}"
+    },
+    "grade": {
+      "title": "Grade your recall",
+      "again": "Again (0)",
+      "hard": "Hard (3)",
+      "good": "Good (4)",
+      "easy": "Easy (5)",
+      "hint": "If you're not sure, prefer <strong>Good</strong>."
+    },
+    "session": {
+      "title": "Session",
+      "count": "{count, plural, one {# card graded} other {# cards graded}}",
+      "hint": "Progress resets when you switch decks. Keep a streak going."
+    },
+    "messages": {
+      "noSession": "No active session token (please login).",
+      "unauthorized": "Unauthorized (token missing/expired).",
+      "failedLoadDecks": "Failed to load decks: {status}{details}",
+      "loadDecksError": "Error while loading decks.",
+      "noDeckSelected": "Please select a deck first.",
+      "failedLoadNext": "Error loading next card: {status}{details}",
+      "loadNextError": "Error while loading next card.",
+      "noDueCards": "No due cards today for this deck.",
+      "failedSubmit": "Error submitting answer: {status}{details}",
+      "submitError": "Error while submitting answer.",
+      "sessionFinished": "Session finished for this deck."
+    }
+  },
+  "stats": {
+    "header": {
+      "title": "Learning statistics",
+      "subtitle": "Overview of your decks, cards, due items, and review momentum.",
+      "endpointLabel": "Endpoint",
+      "protected": "Protected"
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "goToReview": "Go to Review"
+    },
+    "alerts": {
+      "errorTitle": "Error"
+    },
+    "overview": {
+      "title": "Overview",
+      "subtitle": "Data is scoped to your account.",
+      "badge": "Protected - Bearer token"
+    },
+    "empty": {
+      "title": "No data",
+      "hint": "Try refreshing, or complete at least one review session."
+    },
+    "tiles": {
+      "totalDecks": "Total decks",
+      "totalDecksHint": "Decks linked to your account.",
+      "totalCards": "Total cards",
+      "totalCardsHint": "All cards across decks.",
+      "dueToday": "Due today",
+      "learned": "Learned cards",
+      "learnedHint": "Heuristic: repetitions >= 3"
+    },
+    "reviewed": {
+      "label": "Reviewed cards",
+      "hint": "Cards that received at least one grade."
+    },
+    "progress": {
+      "label": "Progress",
+      "tip": "Tip: Keep daily reviews small and consistent.",
+      "empty": "Start reviewing to build your stats.",
+      "emptyNoCards": "Add cards to get progress.",
+      "percent": "{pct}% learned (approx.)"
+    },
+    "dueHints": {
+      "none": "No data yet.",
+      "zero": "No due cards right now. Great time to add or generate new ones.",
+      "light": "Light day: knock these out quickly.",
+      "medium": "Manageable load: schedule a short session.",
+      "high": "Busy queue: break it into chunks to avoid fatigue."
+    },
+    "next": {
+      "title": "Next step",
+      "hint": "If \"Due today\" is 0, hop into Review to cement recent learning or add new cards from Profile."
+    },
+    "messages": {
+      "noSession": "Unauthorized: please login first.",
+      "unauthorized": "Unauthorized (token missing/expired).",
+      "failedLoad": "Failed to load stats: {status}{details}",
+      "loadError": "Failed to load stats."
+    }
+  },
+  "profile": {
+    "loading": "Loading your workspace...",
+    "brand": "Auto-Flashcards",
+    "signOut": "Sign Out",
+    "welcome": "Welcome back, {name}!",
+    "fallbackName": "Student",
+    "createDeck": {
+      "title": "Create New Deck",
+      "subtitle": "Build your flashcard collection",
+      "titleLabel": "Deck Title",
+      "titlePlaceholder": "e.g., Biology Chapter 5",
+      "descriptionLabel": "Description (optional)",
+      "descriptionPlaceholder": "What's this deck about?",
+      "creating": "Creating...",
+      "submit": "Create Deck"
+    },
+    "upload": {
+      "title": "Upload Source File",
+      "subtitle": "Auto-generate flashcards with AI",
+      "supported": "Supported: .txt, .pdf, .docx",
+      "uploading": "Uploading...",
+      "submit": "Upload File"
+    },
+    "collection": {
+      "title": "Your Deck Collection",
+      "count": "{count} decks total",
+      "emptyTitle": "No decks yet",
+      "emptyHint": "Create your first deck above to get started!",
+      "cardsCount": "{count} cards",
+      "generate": "Generate Cards",
+      "generating": "Generating..."
+    },
+    "messages": {
+      "noSession": "No active session token.",
+      "unauthorized": "Unauthorized (token missing/expired)",
+      "loadDecksError": "Failed to load decks: {status} \"{details}\"",
+      "loadDecksUnknown": "Unknown error while loading decks",
+      "createDeckError": "Backend error: {status} \"{details}\"",
+      "createDeckUnknown": "Error while creating deck",
+      "noFile": "Please choose a file first.",
+      "noUser": "No authenticated user.",
+      "unsupportedFile": "Supported files: .txt .pdf .docx",
+      "uploaded": "Uploaded: {name}",
+      "uploadError": "Error while uploading file",
+      "noUpload": "Please upload a file first.",
+      "downloadError": "Failed to download file from storage.",
+      "aiGenerateFailed": "AI generate failed: {status} \"{details}\"",
+      "aiNoCards": "AI returned 0 cards.",
+      "aiGenerated": "Generated and saved {count} cards to deck #{id}.",
+      "aiError": "Error while generating flashcards."
+    }
+  },
+  "login": {
+    "title": "Welcome Back",
+    "subtitle": "Login to Auto-Flashcards",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "loginButton": "Login",
+    "loggingIn": "Logging in...",
+    "or": "or",
+    "createAccount": "Create new account",
+    "footer": "By continuing, you agree to our Terms of Service and Privacy Policy"
+  },
+  "register": {
+    "title": "Create account",
+    "subtitle": "Sign up to start creating and reviewing flashcards.",
+    "fullNameLabel": "Full name",
+    "fullNamePlaceholder": "e.g., Majid Albadwi",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordHint": "min 6 chars",
+    "passwordPlaceholder": "Enter at least 6 characters",
+    "show": "Show",
+    "hide": "Hide",
+    "showPasswordAria": "Show password",
+    "hidePasswordAria": "Hide password",
+    "errorTitle": "Sign up failed",
+    "infoTitle": "Success",
+    "submit": "Sign up",
+    "submitting": "Creating account...",
+    "alreadyAccount": "Already have an account? Login",
+    "footer": "By signing up you agree to the app usage rules.",
+    "backHome": "Back to Home",
+    "confirmationNote": "If email confirmation is enabled in Supabase, you must confirm before login.",
+    "infoMessage": "Account created. Please check your email to confirm, then login.",
+    "errors": {
+      "nameShort": "Full name must be at least 2 characters.",
+      "invalidEmail": "Please enter a valid email.",
+      "passwordShort": "Password must be at least 6 characters.",
+      "unexpected": "Unexpected error during sign up"
+    }
+  }
+}

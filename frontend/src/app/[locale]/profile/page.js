@@ -1,11 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabaseClient";
+import { useRouter } from "next-intl/navigation";
+import { supabase } from "../../lib/supabaseClient";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
 const BUCKET = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || "uploads";
 
@@ -28,6 +28,7 @@ function guessMimeByName(name) {
 }
 
 export default function ProfilePage() {
+  const t = useTranslations("profile");
   const router = useRouter();
 
   const [user, setUser] = useState(null);
@@ -58,7 +59,7 @@ export default function ProfilePage() {
     const token = sessionData?.session?.access_token;
     if (!token) {
       router.push("/login");
-      throw new Error("No active session token");
+      throw new Error(t("messages.noSession"));
     }
 
     const headers = new Headers(options.headers || {});
@@ -76,7 +77,7 @@ export default function ProfilePage() {
 
     if (res.status === 401) {
       router.push("/login");
-      throw new Error("Unauthorized (token missing/expired)");
+      throw new Error(t("messages.unauthorized"));
     }
 
     return res;
@@ -84,8 +85,8 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error || !data.user) {
+      const { data, error: userError } = await supabase.auth.getUser();
+      if (userError || !data.user) {
         router.push("/login");
         return;
       }
@@ -95,20 +96,20 @@ export default function ProfilePage() {
       try {
         const res = await apiFetch("/decks/", { method: "GET" });
         if (!res.ok) {
-          const t = await res.text();
-          throw new Error(`Failed to load decks: ${res.status} – ${t}`);
+          const text = await res.text();
+          throw new Error(t("messages.loadDecksError", { status: res.status, details: text }));
         }
         const json = await res.json();
         setDecks(Array.isArray(json) ? json : []);
       } catch (err) {
-        setError(err?.message || "Unknown error while loading decks");
+        setError(err?.message || t("messages.loadDecksUnknown"));
       } finally {
         setLoading(false);
       }
     };
 
     load();
-  }, [router]);
+  }, [router, t]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -133,7 +134,7 @@ export default function ProfilePage() {
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(`Backend error: ${res.status} – ${text}`);
+        throw new Error(t("messages.createDeckError", { status: res.status, details: text }));
       }
 
       const created = await res.json();
@@ -141,7 +142,7 @@ export default function ProfilePage() {
       setNewTitle("");
       setNewDescription("");
     } catch (err) {
-      setError(err?.message || "Error while creating deck");
+      setError(err?.message || t("messages.createDeckUnknown"));
     } finally {
       setCreating(false);
     }
@@ -155,11 +156,11 @@ export default function ProfilePage() {
     setAiStatus("");
 
     if (!selectedFile) {
-      setUploadError("Please choose a file first.");
+      setUploadError(t("messages.noFile"));
       return;
     }
     if (!user) {
-      setUploadError("No authenticated user.");
+      setUploadError(t("messages.noUser"));
       return;
     }
 
@@ -172,7 +173,7 @@ export default function ProfilePage() {
       const ok =
         name.endsWith(".txt") || name.endsWith(".pdf") || name.endsWith(".docx");
       if (!ok) {
-        throw new Error("Supported files: .txt .pdf .docx");
+        throw new Error(t("messages.unsupportedFile"));
       }
 
       const fileName = `${Date.now()}-${file.name}`;
@@ -190,9 +191,9 @@ export default function ProfilePage() {
       ]);
 
       setSelectedFile(null);
-      setUploadMessage(`Uploaded: ${file.name}`);
+      setUploadMessage(t("messages.uploaded", { name: file.name }));
     } catch (err) {
-      setUploadError(err?.message || "Error while uploading file");
+      setUploadError(err?.message || t("messages.uploadError"));
     } finally {
       setUploading(false);
     }
@@ -203,11 +204,11 @@ export default function ProfilePage() {
     setAiStatus("");
 
     if (!uploadedFiles.length) {
-      setAiError("Please upload a file first.");
+      setAiError(t("messages.noUpload"));
       return;
     }
     if (!user) {
-      setAiError("No authenticated user.");
+      setAiError(t("messages.noUser"));
       return;
     }
 
@@ -220,7 +221,7 @@ export default function ProfilePage() {
         .download(lastFile.path);
 
       if (downloadError) throw downloadError;
-      if (!blob) throw new Error("Failed to download file from storage.");
+      if (!blob) throw new Error(t("messages.downloadError"));
 
       const mime = blob.type || guessMimeByName(lastFile.name) || "";
       const f = new File([blob], lastFile.name, { type: mime });
@@ -236,12 +237,12 @@ export default function ProfilePage() {
 
       if (!aiRes.ok) {
         const msg = await aiRes.text().catch(() => "");
-        throw new Error(`AI generate failed: ${aiRes.status} – ${msg}`);
+        throw new Error(t("messages.aiGenerateFailed", { status: aiRes.status, details: msg }));
       }
 
       const aiJson = await aiRes.json();
       const cards = aiJson.cards || [];
-      if (!cards.length) throw new Error("AI returned 0 cards.");
+      if (!cards.length) throw new Error(t("messages.aiNoCards"));
 
       for (const card of cards) {
         const question = clipStr(card.question, MAX_QUESTION_LEN).trim();
@@ -266,9 +267,9 @@ export default function ProfilePage() {
         setDecks((prev) => prev.map((d) => (d.id === deckId ? updatedDeck : d)));
       }
 
-      setAiStatus(`Generated and saved ${cards.length} cards to deck #${deckId}.`);
+      setAiStatus(t("messages.aiGenerated", { count: cards.length, id: deckId }));
     } catch (err) {
-      setAiError(err?.message || "Error while generating flashcards.");
+      setAiError(err?.message || t("messages.aiError"));
     } finally {
       setGeneratingDeckId(null);
     }
@@ -282,7 +283,7 @@ export default function ProfilePage() {
             <div className="absolute inset-0 border-4 border-violet-500/30 rounded-full"></div>
             <div className="absolute inset-0 border-4 border-transparent border-t-violet-500 rounded-full animate-spin"></div>
           </div>
-          <p className="text-slate-300 text-lg font-medium">Loading your workspace...</p>
+          <p className="text-slate-300 text-lg font-medium">{t("loading")}</p>
         </div>
       </div>
     );
@@ -292,13 +293,14 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 -left-20 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 -right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1.5s'}}></div>
+        <div
+          className="absolute bottom-0 -right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1.5s" }}
+        ></div>
       </div>
 
-      {/* Navbar */}
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-slate-700/50 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -309,7 +311,7 @@ export default function ProfilePage() {
                 </svg>
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent">
-                Auto-Flashcards
+                {t("brand")}
               </span>
             </div>
             <button
@@ -319,32 +321,28 @@ export default function ProfilePage() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              <span className="hidden sm:inline">Sign Out</span>
+              <span className="hidden sm:inline">{t("signOut")}</span>
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Main Content */}
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Welcome Header */}
         <header className="mb-6 sm:mb-8 p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl border border-slate-700/50 shadow-xl">
           <div className="flex items-center gap-4 mb-3">
             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-2xl sm:text-3xl shadow-lg">
-              👋
+              AF
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                Welcome back, {user.user_metadata?.full_name || "Student"}!
+                {t("welcome", { name: user.user_metadata?.full_name || t("fallbackName") })}
               </h1>
               <p className="text-slate-400 text-sm sm:text-base">{user.email}</p>
             </div>
           </div>
         </header>
 
-        {/* Action Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          {/* Create Deck Card */}
           <div className="p-6 sm:p-8 rounded-2xl bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 shadow-xl hover:border-violet-500/50 transition-all duration-300">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center">
@@ -353,35 +351,35 @@ export default function ProfilePage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-bold text-white">Create New Deck</h2>
-                <p className="text-slate-400 text-xs sm:text-sm">Build your flashcard collection</p>
+                <h2 className="text-lg sm:text-xl font-bold text-white">{t("createDeck.title")}</h2>
+                <p className="text-slate-400 text-xs sm:text-sm">{t("createDeck.subtitle")}</p>
               </div>
             </div>
 
             <form onSubmit={handleCreateDeck} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Deck Title
+                  {t("createDeck.titleLabel")}
                 </label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g., Biology Chapter 5"
+                  placeholder={t("createDeck.titlePlaceholder")}
                   className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-slate-600 bg-slate-950/50 text-white placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Description (optional)
+                  {t("createDeck.descriptionLabel")}
                 </label>
                 <textarea
                   rows={3}
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
-                  placeholder="What's this deck about?"
+                  placeholder={t("createDeck.descriptionPlaceholder")}
                   className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-slate-600 bg-slate-950/50 text-white placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all resize-none"
                 />
               </div>
@@ -406,21 +404,20 @@ export default function ProfilePage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Creating...
+                    {t("createDeck.creating")}
                   </>
                 ) : (
                   <>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    Create Deck
+                    {t("createDeck.submit")}
                   </>
                 )}
               </button>
             </form>
           </div>
 
-          {/* Upload File Card */}
           <div className="p-6 sm:p-8 rounded-2xl bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 shadow-xl hover:border-blue-500/50 transition-all duration-300">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
@@ -429,8 +426,8 @@ export default function ProfilePage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-bold text-white">Upload Source File</h2>
-                <p className="text-slate-400 text-xs sm:text-sm">Auto-generate flashcards with AI</p>
+                <h2 className="text-lg sm:text-xl font-bold text-white">{t("upload.title")}</h2>
+                <p className="text-slate-400 text-xs sm:text-sm">{t("upload.subtitle")}</p>
               </div>
             </div>
 
@@ -446,7 +443,7 @@ export default function ProfilePage() {
                   }}
                   className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-slate-600 bg-slate-950/50 text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500/20 file:text-blue-400 file:font-medium hover:border-blue-500/50 transition-all cursor-pointer"
                 />
-                <p className="mt-2 text-xs text-slate-500">Supported: .txt, .pdf, .docx</p>
+                <p className="mt-2 text-xs text-slate-500">{t("upload.supported")}</p>
               </div>
 
               <button
@@ -460,14 +457,14 @@ export default function ProfilePage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Uploading...
+                    {t("upload.uploading")}
                   </>
                 ) : (
                   <>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
-                    Upload File
+                    {t("upload.submit")}
                   </>
                 )}
               </button>
@@ -492,7 +489,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* AI Status Messages */}
         {(aiError || aiStatus) && (
           <div className="mb-6 sm:mb-8">
             {aiError && (
@@ -514,7 +510,6 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Decks Collection */}
         <section className="p-6 sm:p-8 rounded-2xl bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 shadow-xl">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center">
@@ -523,8 +518,8 @@ export default function ProfilePage() {
               </svg>
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-white">Your Deck Collection</h2>
-              <p className="text-slate-400 text-sm">{decks.length} deck{decks.length !== 1 ? 's' : ''} total</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">{t("collection.title")}</h2>
+              <p className="text-slate-400 text-sm">{t("collection.count", { count: decks.length })}</p>
             </div>
           </div>
 
@@ -535,8 +530,8 @@ export default function ProfilePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                 </svg>
               </div>
-              <p className="text-slate-400 text-lg">No decks yet</p>
-              <p className="text-slate-500 text-sm mt-2">Create your first deck above to get started!</p>
+              <p className="text-slate-400 text-lg">{t("collection.emptyTitle")}</p>
+              <p className="text-slate-500 text-sm mt-2">{t("collection.emptyHint")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -565,7 +560,7 @@ export default function ProfilePage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
-                    <span>{deck.cards?.length || 0} cards</span>
+                    <span>{t("collection.cardsCount", { count: deck.cards?.length || 0 })}</span>
                   </div>
 
                   <button
@@ -579,14 +574,14 @@ export default function ProfilePage() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Generating...
+                        {t("collection.generating")}
                       </>
                     ) : (
                       <>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
-                        Generate Cards
+                        {t("collection.generate")}
                       </>
                     )}
                   </button>

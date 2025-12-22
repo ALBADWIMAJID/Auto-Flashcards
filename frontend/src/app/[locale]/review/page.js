@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import Link from "next-intl/link";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabaseClient";
+import { useRouter } from "next-intl/navigation";
+import { supabase } from "../../lib/supabaseClient";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
@@ -101,14 +102,14 @@ function SkeletonBlock({ h = "h-12" }) {
 }
 
 /* --------------------------------- Data helpers --------------------------------- */
-async function apiFetchAuthed(router, path, options = {}) {
+async function apiFetchAuthed(router, t, path, options = {}) {
   const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
   if (sessionErr) throw new Error(sessionErr.message);
 
   const token = sessionData?.session?.access_token;
   if (!token) {
     router.push("/login");
-    throw new Error("No active session token (please login).");
+    throw new Error(t("messages.noSession"));
   }
 
   const headers = new Headers(options.headers || {});
@@ -119,7 +120,7 @@ async function apiFetchAuthed(router, path, options = {}) {
 
   if (res.status === 401) {
     router.push("/login");
-    throw new Error("Unauthorized (token missing/expired).");
+    throw new Error(t("messages.unauthorized"));
   }
 
   return res;
@@ -127,6 +128,7 @@ async function apiFetchAuthed(router, path, options = {}) {
 
 /* --------------------------------- Page --------------------------------- */
 export default function ReviewPage() {
+  const t = useTranslations("review");
   const router = useRouter();
 
   const [decks, setDecks] = useState([]);
@@ -150,10 +152,11 @@ export default function ReviewPage() {
     setError("");
 
     try {
-      const res = await apiFetchAuthed(router, "/decks/", { method: "GET" });
+      const res = await apiFetchAuthed(router, t, "/decks/", { method: "GET" });
       if (!res.ok) {
-        const t = await res.text().catch(() => "");
-        throw new Error(`Failed to load decks: ${res.status}${t ? ` "${t}"` : ""}`);
+        const text = await res.text().catch(() => "");
+        const details = text ? ` "${text}"` : "";
+        throw new Error(t("messages.failedLoadDecks", { status: res.status, details }));
       }
 
       const list = (await res.json()) || [];
@@ -162,17 +165,17 @@ export default function ReviewPage() {
       const firstId = Array.isArray(list) && list[0]?.id ? String(list[0].id) : "";
       setSelectedDeckId(firstId);
     } catch (err) {
-      setError(err?.message || "Error while loading decks.");
+      setError(err?.message || t("messages.loadDecksError"));
       setDecks([]);
       setSelectedDeckId("");
     } finally {
       setLoadingDecks(false);
     }
-  }, [router]);
+  }, [router, t]);
 
   const loadNextCard = useCallback(async () => {
     if (!selectedDeckId) {
-      setError("Please select a deck first.");
+      setError(t("messages.noDeckSelected"));
       return;
     }
 
@@ -182,29 +185,30 @@ export default function ReviewPage() {
     setShowAnswer(false);
 
     try {
-      const res = await apiFetchAuthed(router, `/review/next?deck_id=${encodeURIComponent(selectedDeckId)}`, {
+      const res = await apiFetchAuthed(router, t, `/review/next?deck_id=${encodeURIComponent(selectedDeckId)}`, {
         method: "GET",
       });
 
       if (!res.ok) {
         const text = await res.text().catch(() => "");
-        throw new Error(`Error loading next card: ${res.status}${text ? ` "${text}"` : ""}`);
+        const details = text ? ` "${text}"` : "";
+        throw new Error(t("messages.failedLoadNext", { status: res.status, details }));
       }
 
       const json = await res.json();
       if (!json?.card) {
         setCurrentCard(null);
-        setInfoMessage("No due cards today for this deck.");
+        setInfoMessage(t("messages.noDueCards"));
       } else {
         setCurrentCard(json.card);
       }
     } catch (err) {
-      setError(err?.message || "Error while loading next card.");
+      setError(err?.message || t("messages.loadNextError"));
       setCurrentCard(null);
     } finally {
       setLoadingCard(false);
     }
-  }, [router, selectedDeckId]);
+  }, [router, selectedDeckId, t]);
 
   const handleAnswer = useCallback(
     async (grade) => {
@@ -215,7 +219,7 @@ export default function ReviewPage() {
       setInfoMessage("");
 
       try {
-        const res = await apiFetchAuthed(router, "/review/answer", {
+        const res = await apiFetchAuthed(router, t, "/review/answer", {
           method: "POST",
           body: JSON.stringify({
             deck_id: Number.isFinite(Number(selectedDeckId)) ? Number(selectedDeckId) : selectedDeckId,
@@ -226,13 +230,14 @@ export default function ReviewPage() {
 
         if (!res.ok) {
           const text = await res.text().catch(() => "");
-          throw new Error(`Error submitting answer: ${res.status}${text ? ` "${text}"` : ""}`);
+          const details = text ? ` "${text}"` : "";
+          throw new Error(t("messages.failedSubmit", { status: res.status, details }));
         }
 
         const data = await res.json();
         if (!data?.next_card) {
           setCurrentCard(null);
-          setInfoMessage("Session finished for this deck.");
+          setInfoMessage(t("messages.sessionFinished"));
           setShowAnswer(false);
         } else {
           setCurrentCard(data.next_card);
@@ -240,12 +245,12 @@ export default function ReviewPage() {
         }
         setSessionCount((n) => n + 1);
       } catch (err) {
-        setError(err?.message || "Error while submitting answer.");
+        setError(err?.message || t("messages.submitError"));
       } finally {
         setSubmitting(false);
       }
     },
-    [router, currentCard, selectedDeckId]
+    [router, currentCard, selectedDeckId, t]
   );
 
   useEffect(() => {
@@ -253,7 +258,6 @@ export default function ReviewPage() {
   }, [loadDecks]);
 
   useEffect(() => {
-    // When deck changes reset and load
     if (!selectedDeckId) return;
     setCurrentCard(null);
     setInfoMessage("");
@@ -276,25 +280,22 @@ export default function ReviewPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
       <div className="rounded-3xl border border-slate-800/70 bg-slate-900/30 p-6 md:p-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div className="space-y-1">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Review mode <span className="text-slate-400 text-base">(UC-3)</span>
+              {t("header.title")} <span className="text-slate-400 text-base">(UC-3)</span>
             </h1>
-            <p className="text-sm text-slate-300">
-              Select a deck, flip the card, then grade your recall (SM-2). Keep runs short and focused.
-            </p>
+            <p className="text-sm text-slate-300">{t("header.subtitle")}</p>
             <div className="mt-2 text-xs text-slate-500">
-              API: <span className="text-slate-300">{API_BASE}</span> -{" "}
-              <span className="text-emerald-300">Auth required</span>
+              {t("header.apiLabel")}: <span className="text-slate-300">{API_BASE}</span> -{" "}
+              <span className="text-emerald-300">{t("header.authRequired")}</span>
             </div>
           </div>
 
           <div className="flex gap-2">
             <Button variant="secondary" loading={loadingDecks} onClick={() => loadDecks()} className="w-auto">
-              Reload decks
+              {t("actions.reloadDecks")}
             </Button>
             <Button
               variant="primary"
@@ -303,31 +304,29 @@ export default function ReviewPage() {
               onClick={() => loadNextCard()}
               className="w-auto"
             >
-              Load next
+              {t("actions.loadNext")}
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Alerts */}
       <div className="space-y-3">
         {error ? (
-          <Alert type="error" title="Error">
+          <Alert type="error" title={t("alerts.errorTitle")}>
             {error}
           </Alert>
         ) : null}
         {infoMessage ? (
-          <Alert type="success" title="Info">
+          <Alert type="success" title={t("alerts.infoTitle")}>
             {infoMessage}
           </Alert>
         ) : null}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left: deck selection */}
         <CardShell
-          title="Choose a deck"
-          subtitle="Your review session will use due cards from the selected deck."
+          title={t("deck.title")}
+          subtitle={t("deck.subtitle")}
           right={
             <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
               GET <span className="text-slate-200">/decks/</span>
@@ -341,21 +340,23 @@ export default function ReviewPage() {
             </div>
           ) : !hasDecks ? (
             <div className="rounded-2xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-sm text-amber-100">
-              <div className="font-semibold">No decks found</div>
+              <div className="font-semibold">{t("deck.emptyTitle")}</div>
               <div className="mt-1 text-xs opacity-90">
-                Create a deck first from{" "}
-                <Link href="/profile" className="text-amber-200 hover:underline">
-                  Profile
-                </Link>
-                .
+                {t.rich("deck.emptyHint", {
+                  profile: (chunks) => (
+                    <Link href="/profile" className="text-amber-200 hover:underline">
+                      {chunks}
+                    </Link>
+                  ),
+                })}
               </div>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <div className="flex items-end justify-between gap-3">
-                  <label className="text-xs font-medium text-slate-200">Available decks</label>
-                  <span className="text-[11px] text-slate-500">{decks.length} total</span>
+                  <label className="text-xs font-medium text-slate-200">{t("deck.availableLabel")}</label>
+                  <span className="text-[11px] text-slate-500">{t("deck.totalCount", { count: decks.length })}</span>
                 </div>
 
                 <Select
@@ -383,7 +384,7 @@ export default function ReviewPage() {
                   disabled={!canLoad}
                   className="w-full"
                 >
-                  Refresh current
+                  {t("actions.refresh")}
                 </Button>
 
                 <Button
@@ -395,25 +396,25 @@ export default function ReviewPage() {
                   disabled={!canLoad}
                   className="w-full"
                 >
-                  Next card
+                  {t("actions.nextCard")}
                 </Button>
               </div>
 
               <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
-                <div className="text-sm font-semibold">Tip</div>
+                <div className="text-sm font-semibold">{t("deck.tipTitle")}</div>
                 <div className="mt-1 text-xs text-slate-400">
-                  Click <span className="text-slate-200">Show answer</span>, then pick Again / Hard / Good / Easy.
-                  If unsure, lean on <span className="text-slate-200">Good</span> to keep momentum.
+                  {t.rich("deck.tipBody", {
+                    strong: (chunks) => <span className="text-slate-200">{chunks}</span>,
+                  })}
                 </div>
               </div>
             </div>
           )}
         </CardShell>
 
-        {/* Right: current card */}
         <CardShell
-          title="Current card"
-          subtitle="Question first, then reveal the answer, then grade your recall."
+          title={t("card.title")}
+          subtitle={t("card.subtitle")}
           right={
             <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
               GET/POST <span className="text-slate-200">/review</span>
@@ -428,21 +429,21 @@ export default function ReviewPage() {
             </div>
           ) : !currentCard ? (
             <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
-              <div className="text-sm font-semibold">No active card</div>
+              <div className="text-sm font-semibold">{t("card.emptyTitle")}</div>
               <div className="mt-1 text-xs text-slate-400">
-                {selectedDeckId ? "Try loading next card." : "Select a deck first."}
+                {selectedDeckId ? t("card.emptyHintWithDeck") : t("card.emptyHintNoDeck")}
               </div>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5">
                 <div className="flex items-center justify-between text-[11px] text-slate-400">
-                  <span>Deck: {activeDeck?.title || selectedDeckId}</span>
-                  <span>Card: {currentCard.id}</span>
+                  <span>{t("card.deckLabel", { deck: activeDeck?.title || selectedDeckId })}</span>
+                  <span>{t("card.cardLabel", { id: currentCard.id })}</span>
                 </div>
 
                 <div className="mt-4">
-                  <div className="text-xs font-semibold text-slate-400">Question</div>
+                  <div className="text-xs font-semibold text-slate-400">{t("card.questionLabel")}</div>
                   <div className="mt-1 text-base font-semibold text-slate-50">{currentCard.question}</div>
                 </div>
 
@@ -452,7 +453,7 @@ export default function ReviewPage() {
                     onClick={() => setShowAnswer((v) => !v)}
                     className="inline-flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/40 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/60 transition"
                   >
-                    {showAnswer ? "Hide answer" : "Show answer"}
+                    {showAnswer ? t("card.hideAnswer") : t("card.showAnswer")}
                   </button>
 
                   {showAnswer ? (
@@ -460,41 +461,43 @@ export default function ReviewPage() {
                       {currentCard.answer}
                     </div>
                   ) : (
-                    <div className="mt-3 text-xs text-slate-500">Reveal the answer when you're ready.</div>
+                    <div className="mt-3 text-xs text-slate-500">{t("card.revealHint")}</div>
                   )}
                 </div>
               </div>
 
               <div className="rounded-3xl border border-slate-800/70 bg-slate-950/40 p-4">
-                <div className="text-xs font-semibold text-slate-300 mb-3">Grade your recall</div>
+                <div className="text-xs font-semibold text-slate-300 mb-3">{t("grade.title")}</div>
 
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Button variant="danger" disabled={submitting} loading={submitting} onClick={() => handleAnswer(0)}>
-                    Again (0)
+                    {t("grade.again")}
                   </Button>
 
                   <Button variant="warn" disabled={submitting} onClick={() => handleAnswer(3)}>
-                    Hard (3)
+                    {t("grade.hard")}
                   </Button>
 
                   <Button variant="primary" disabled={submitting} onClick={() => handleAnswer(4)}>
-                    Good (4)
+                    {t("grade.good")}
                   </Button>
 
                   <Button variant="success" disabled={submitting} onClick={() => handleAnswer(5)}>
-                    Easy (5)
+                    {t("grade.easy")}
                   </Button>
                 </div>
 
                 <div className="mt-3 text-[11px] text-slate-500">
-                  If you're not sure, prefer <span className="text-slate-300">Good</span>.
+                  {t.rich("grade.hint", {
+                    strong: (chunks) => <span className="text-slate-300">{chunks}</span>,
+                  })}
                 </div>
               </div>
 
               <div className="rounded-3xl border border-slate-800/70 bg-slate-950/40 p-4">
                 <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
-                  <span>Session</span>
-                  <span className="text-slate-400">{sessionCount} cards graded</span>
+                  <span>{t("session.title")}</span>
+                  <span className="text-slate-400">{t("session.count", { count: sessionCount })}</span>
                 </div>
                 <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-900">
                   <div
@@ -502,9 +505,7 @@ export default function ReviewPage() {
                     style={{ width: `${Math.min(sessionCount * 12, 100)}%` }}
                   />
                 </div>
-                <div className="mt-2 text-[11px] text-slate-500">
-                  Progress resets when you switch decks. Keep a streak going.
-                </div>
+                <div className="mt-2 text-[11px] text-slate-500">{t("session.hint")}</div>
               </div>
             </div>
           )}

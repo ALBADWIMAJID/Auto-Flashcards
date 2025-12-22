@@ -1,18 +1,18 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from "next-intl/link";
+import { usePathname } from "next-intl/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-const NAV_ITEMS = [
-  { href: "/", label: "Home" },
-  { href: "/review", label: "Review" },
-  { href: "/stats", label: "Stats" },
-  { href: "/profile", label: "Profile" },
+const LOCALES = [
+  { code: "en", label: "EN" },
+  { code: "ar", label: "AR" },
+  { code: "ru", label: "RU" },
 ];
 
 function NavItem({ href, label, active, onClick }) {
@@ -58,8 +58,20 @@ function PillLink({ href, children, variant = "ghost", onClick }) {
 }
 
 export default function Navbar() {
-  const pathname = usePathname();
+  const t = useTranslations("nav");
+  const locale = useLocale();
+  const pathname = usePathname() || "/";
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navItems = useMemo(
+    () => [
+      { href: "/", label: t("home") },
+      { href: "/review", label: t("review") },
+      { href: "/stats", label: t("stats") },
+      { href: "/profile", label: t("profile") },
+    ],
+    [t]
+  );
 
   const isActive = useMemo(() => {
     return (href) => {
@@ -73,29 +85,44 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/75 backdrop-blur">
       <div className="mx-auto max-w-6xl px-4 py-3">
         <div className="flex items-center justify-between gap-4">
-          {/* Brand */}
           <Link href="/" className="flex items-center gap-2 group">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-sky-500/10 ring-1 ring-sky-500/20">
               <span className="h-2.5 w-2.5 rounded-full bg-sky-400/80" />
             </span>
             <div className="leading-tight">
               <div className="text-sm md:text-base font-semibold text-slate-100 group-hover:text-sky-200 transition-colors">
-                Auto-Flashcards
+                {t("brand")}
               </div>
-              <div className="text-[10px] md:text-xs text-slate-400">CodeX Team Project</div>
+              <div className="text-[10px] md:text-xs text-slate-400">{t("tagline")}</div>
             </div>
           </Link>
 
-          {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-2">
-            {NAV_ITEMS.map((it) => (
+            {navItems.map((it) => (
               <NavItem key={it.href} href={it.href} label={it.label} active={isActive(it.href)} />
             ))}
           </nav>
 
-          {/* Right actions */}
+          <div className="hidden lg:flex items-center gap-1 rounded-full border border-slate-800 bg-slate-900/40 px-2 py-1">
+            {LOCALES.map((item) => (
+              <Link
+                key={item.code}
+                href={pathname}
+                locale={item.code}
+                className={cx(
+                  "rounded-full px-2 py-1 text-[11px] font-semibold transition",
+                  locale === item.code
+                    ? "bg-slate-800/80 text-slate-100"
+                    : "text-slate-400 hover:text-slate-100"
+                )}
+                aria-label={t("language")}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
           <div className="flex items-center gap-2">
-            {/* Mobile toggle */}
             <button
               type="button"
               className={cx(
@@ -103,12 +130,12 @@ export default function Navbar() {
                 "text-slate-200 hover:bg-slate-800/60 transition",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/30 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
               )}
-              aria-label="Open menu"
+              aria-label={t("openMenu")}
               aria-expanded={mobileOpen}
               aria-controls="mobile-menu"
               onClick={() => setMobileOpen((v) => !v)}
             >
-              <span className="sr-only">Menu</span>
+              <span className="sr-only">{t("menu")}</span>
               <svg
                 width="18"
                 height="18"
@@ -137,14 +164,13 @@ export default function Navbar() {
 
             <span className="hidden sm:inline-block h-6 w-px bg-slate-800 mx-1" />
 
-            <PillLink href="/login">Login</PillLink>
+            <PillLink href="/login">{t("login")}</PillLink>
             <PillLink href="/register" variant="primary">
-              Get started
+              {t("getStarted")}
             </PillLink>
           </div>
         </div>
 
-        {/* Mobile menu panel */}
         <div
           id="mobile-menu"
           className={cx(
@@ -154,7 +180,7 @@ export default function Navbar() {
         >
           <div className="rounded-3xl border border-slate-800/70 bg-slate-900/40 p-3">
             <div className="flex flex-wrap gap-2">
-              {NAV_ITEMS.map((it) => (
+              {navItems.map((it) => (
                 <NavItem
                   key={it.href}
                   href={it.href}
@@ -165,12 +191,31 @@ export default function Navbar() {
               ))}
             </div>
 
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {LOCALES.map((item) => (
+                <Link
+                  key={item.code}
+                  href={pathname}
+                  locale={item.code}
+                  onClick={() => setMobileOpen(false)}
+                  className={cx(
+                    "rounded-full px-3 py-1 text-[11px] font-semibold transition",
+                    locale === item.code
+                      ? "bg-slate-800/80 text-slate-100"
+                      : "text-slate-400 hover:text-slate-100 border border-slate-800/70"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
             <div className="mt-3 flex items-center gap-2">
               <PillLink href="/login" onClick={() => setMobileOpen(false)}>
-                Login
+                {t("login")}
               </PillLink>
               <PillLink href="/register" variant="primary" onClick={() => setMobileOpen(false)}>
-                Get started
+                {t("getStarted")}
               </PillLink>
             </div>
           </div>
