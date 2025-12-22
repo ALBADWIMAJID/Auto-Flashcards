@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { getSessionSafe, getUserSafe } from "../lib/supabaseSession";
 import { Link } from "../../i18n/navigation";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
@@ -20,7 +21,7 @@ function truncateMiddle(str, left = 10, right = 10) {
 
 /* ------------------------------- Auth + Fetch ------------------------------- */
 async function getAccessToken() {
-  const { data, error } = await supabase.auth.getSession();
+  const { data, error } = await getSessionSafe();
   if (error) return null;
   return data?.session?.access_token || null;
 }
@@ -312,7 +313,7 @@ export default function HomePage() {
     let mounted = true;
 
     async function boot() {
-      const { data } = await supabase.auth.getUser();
+      const { data } = await getUserSafe();
       if (!mounted) return;
 
       setUser(data?.user || null);

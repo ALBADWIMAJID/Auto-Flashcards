@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { getSessionSafe, getUserSafe } from "../../lib/supabaseSession";
 import { useRouter } from "../../../i18n/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
@@ -52,8 +53,7 @@ export default function ProfilePage() {
   const [generatingDeckId, setGeneratingDeckId] = useState(null);
 
   const apiFetch = async (path, options = {}) => {
-    const { data: sessionData, error: sessionErr } =
-      await supabase.auth.getSession();
+    const { data: sessionData, error: sessionErr } = await getSessionSafe();
     if (sessionErr) throw new Error(sessionErr.message);
 
     const token = sessionData?.session?.access_token;
@@ -85,7 +85,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data, error: userError } = await supabase.auth.getUser();
+      const { data, error: userError } = await getUserSafe();
       if (userError || !data.user) {
         router.push("/login");
         return;

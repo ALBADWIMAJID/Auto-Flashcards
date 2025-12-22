@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { getSessionSafe } from "../../lib/supabaseSession";
 import { Link, useRouter } from "../../../i18n/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
@@ -102,7 +102,7 @@ function SkeletonTile() {
 
 /* ------------------------------ API helper ------------------------------ */
 async function apiFetchAuthed(router, t, path, options = {}) {
-  const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+  const { data: sessionData, error: sessionErr } = await getSessionSafe();
   if (sessionErr) throw new Error(sessionErr.message);
 
   const token = sessionData?.session?.access_token;
