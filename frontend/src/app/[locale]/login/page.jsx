@@ -2,9 +2,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRouter } from "next-intl/navigation";
 import { useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { useRouter } from "../../../i18n/navigation";
 
 export default function LoginPage() {
   const t = useTranslations("login");

@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next-intl/link";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { useRouter } from "next-intl/navigation";
 import { supabase } from "../../lib/supabaseClient";
+import { Link, useRouter } from "../../../i18n/navigation";
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");

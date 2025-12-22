@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next-intl/link";
-import { usePathname } from "next-intl/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { Link, usePathname } from "../../i18n/navigation";
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");

@@ -1,16 +1,15 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { routing } from "../../i18n/routing";
 import Navbar from "../_components/Navbar";
 
-const locales = ["en", "ar", "ru"];
-
 export function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
+  return routing.locales.map((locale) => ({ locale }));
 }
 
 export default async function LocaleLayout({ children, params: { locale } }) {
-  if (!locales.includes(locale)) {
+  if (!routing.locales.includes(locale)) {
     notFound();
   }
 
