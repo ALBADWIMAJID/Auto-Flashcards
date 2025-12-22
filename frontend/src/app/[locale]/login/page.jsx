@@ -33,7 +33,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-surface-2 to-background px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 -left-10 sm:-left-20 w-48 sm:w-72 h-48 sm:h-72 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div
@@ -43,7 +43,7 @@ export default function LoginPage() {
       </div>
 
       <form onSubmit={handleLogin} className="w-full max-w-md relative z-10">
-        <div className="rounded-2xl border border-slate-700/50 bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-2xl hover:border-slate-600/50 transition-all duration-300">
+        <div className="rounded-2xl border border-border-strong/60 bg-surface-2/90 backdrop-blur-xl p-6 sm:p-8 shadow-2xl hover:border-border-strong/50 transition-all duration-300">
           <div className="flex justify-center mb-4 sm:mb-6">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-sky-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
               <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,15 +55,15 @@ export default function LoginPage() {
           <h1 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2 text-center bg-gradient-to-r from-emerald-400 to-sky-400 bg-clip-text text-transparent">
             {t("title")}
           </h1>
-          <p className="text-slate-400 text-xs sm:text-sm text-center mb-6 sm:mb-8">{t("subtitle")}</p>
+          <p className="text-muted text-xs sm:text-sm text-center mb-6 sm:mb-8">{t("subtitle")}</p>
 
           <div className="mb-4 sm:mb-5">
-            <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-muted-strong mb-2">
               {t("emailLabel")}
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 group-focus-within:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-muted-faint group-focus-within:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                 </svg>
               </div>
@@ -73,18 +73,18 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("emailPlaceholder")}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950/50 pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm text-slate-50 placeholder-slate-500 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                className="w-full rounded-xl border border-border-strong bg-surface-2/80 pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm text-foreground placeholder:text-muted-faint outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
               />
             </div>
           </div>
 
           <div className="mb-5 sm:mb-6">
-            <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-muted-strong mb-2">
               {t("passwordLabel")}
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 group-focus-within:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-muted-faint group-focus-within:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
@@ -94,7 +94,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={t("passwordPlaceholder")}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950/50 pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm text-slate-50 placeholder-slate-500 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                className="w-full rounded-xl border border-border-strong bg-surface-2/80 pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm text-foreground placeholder:text-muted-faint outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
               />
             </div>
           </div>
@@ -111,7 +111,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+            className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-surface-4 disabled:to-surface-4 disabled:cursor-not-allowed px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -133,23 +133,23 @@ export default function LoginPage() {
 
           <div className="relative my-5 sm:my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-700/50"></div>
+              <div className="w-full border-t border-border-strong/60"></div>
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-slate-900 px-3 text-slate-500">{t("or")}</span>
+              <span className="bg-surface-2 px-3 text-muted-faint">{t("or")}</span>
             </div>
           </div>
 
           <button
             type="button"
             onClick={() => router.push("/register")}
-            className="w-full rounded-xl border border-slate-700 bg-slate-950/30 hover:bg-slate-800/50 hover:border-slate-600 px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium text-slate-300 hover:text-slate-100 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full rounded-xl border border-border-strong bg-surface-2/60 hover:bg-surface-3/70 hover:border-border-strong px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium text-muted-strong hover:text-foreground transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
           >
             {t("createAccount")}
           </button>
         </div>
 
-        <p className="text-center text-xs text-slate-500 mt-4 sm:mt-6 px-4">{t("footer")}</p>
+        <p className="text-center text-xs text-muted-faint mt-4 sm:mt-6 px-4">{t("footer")}</p>
       </form>
     </div>
   );

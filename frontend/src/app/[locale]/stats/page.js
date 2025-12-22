@@ -15,7 +15,7 @@ function cx(...classes) {
 function Spinner() {
   return (
     <span
-      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-200/20 border-t-slate-200/80"
+      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-border/40 border-t-foreground/80"
       aria-hidden="true"
     />
   );
@@ -24,8 +24,8 @@ function Spinner() {
 function Button({ variant = "primary", loading, className, children, ...props }) {
   const styles =
     variant === "primary"
-      ? "bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800"
-      : "bg-slate-900/60 hover:bg-slate-800/70 border border-slate-800";
+      ? "bg-sky-600 hover:bg-sky-500 disabled:bg-surface-3"
+      : "bg-surface-2/80 hover:bg-surface-3/80 border border-border";
 
   return (
     <button
@@ -62,11 +62,11 @@ function Alert({ type = "error", title, children }) {
 
 function CardShell({ title, subtitle, right, children }) {
   return (
-    <section className="rounded-3xl border border-slate-800/70 bg-slate-900/40 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
-      <div className="flex flex-col gap-3 border-b border-slate-800/60 px-5 py-4 md:flex-row md:items-start md:justify-between">
+    <section className="rounded-3xl border border-border/70 bg-surface-1/80 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+      <div className="flex flex-col gap-3 border-b border-border/60 px-5 py-4 md:flex-row md:items-start md:justify-between">
         <div className="space-y-1">
           <h2 className="text-base md:text-lg font-semibold tracking-tight">{title}</h2>
-          {subtitle ? <p className="text-xs md:text-sm text-slate-400">{subtitle}</p> : null}
+          {subtitle ? <p className="text-xs md:text-sm text-muted">{subtitle}</p> : null}
         </div>
         {right ? <div className="shrink-0">{right}</div> : null}
       </div>
@@ -78,25 +78,25 @@ function CardShell({ title, subtitle, right, children }) {
 function StatTile({ label, value, hint, tone = "default" }) {
   const toneText =
     tone === "accent"
-      ? "text-sky-100"
-      : tone === "warn"
-      ? "text-amber-100"
-      : tone === "success"
-      ? "text-emerald-100"
-      : "text-slate-50";
+      ? "text-sky-400"
+    : tone === "warn"
+      ? "text-amber-400"
+    : tone === "success"
+      ? "text-emerald-400"
+      : "text-foreground";
 
   return (
-    <div className="rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5">
-      <div className="text-xs text-slate-400">{label}</div>
+    <div className="rounded-3xl border border-border/70 bg-surface-2/80 p-5">
+      <div className="text-xs text-muted">{label}</div>
       <div className={cx("mt-2 text-3xl font-bold tracking-tight", toneText)}>{value ?? "..."}</div>
-      {hint ? <div className="mt-2 text-[11px] text-slate-500">{hint}</div> : null}
+      {hint ? <div className="mt-2 text-[11px] text-muted-faint">{hint}</div> : null}
     </div>
   );
 }
 
 function SkeletonTile() {
   return (
-    <div className="h-[118px] w-full animate-pulse rounded-3xl border border-slate-800/70 bg-slate-950/50" />
+    <div className="h-[118px] w-full animate-pulse rounded-3xl border border-border/70 bg-surface-2/80" />
   );
 }
 
@@ -178,15 +178,15 @@ export default function StatsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-800/70 bg-slate-900/30 p-6 md:p-8">
+      <div className="rounded-3xl border border-border/70 bg-surface-1/70 p-6 md:p-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div className="space-y-1">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              {t("header.title")} <span className="text-slate-400 text-base">(UC-4)</span>
+              {t("header.title")} <span className="text-muted text-base">(UC-4)</span>
             </h1>
-            <p className="text-sm text-slate-300">{t("header.subtitle")}</p>
-            <div className="mt-2 text-xs text-slate-500">
-              {t("header.endpointLabel")}: <span className="text-slate-300">GET {API_BASE}/stats/overview</span> -{" "}
+            <p className="text-sm text-muted-strong">{t("header.subtitle")}</p>
+            <div className="mt-2 text-xs text-muted-faint">
+              {t("header.endpointLabel")}: <span className="text-muted-strong">GET {API_BASE}/stats/overview</span> -{" "}
               <span className="text-emerald-300">{t("header.protected")}</span>
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function StatsPage() {
             </Button>
             <Link
               href="/review"
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-2.5 text-sm font-semibold hover:bg-slate-800/70 transition"
+              className="inline-flex items-center justify-center rounded-2xl border border-border bg-surface-2/80 px-4 py-2.5 text-sm font-semibold hover:bg-surface-3/80 transition"
             >
               {t("actions.goToReview")}
             </Link>
@@ -215,7 +215,7 @@ export default function StatsPage() {
         title={t("overview.title")}
         subtitle={t("overview.subtitle")}
         right={
-          <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
+          <span className="rounded-full border border-border bg-surface-2/70 px-3 py-1 text-[11px] text-muted">
             {t("overview.badge")}
           </span>
         }
@@ -231,9 +231,9 @@ export default function StatsPage() {
             </div>
           </div>
         ) : !stats ? (
-          <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
+          <div className="rounded-2xl border border-border/70 bg-surface-2/60 p-4">
             <div className="text-sm font-semibold">{t("empty.title")}</div>
-            <div className="mt-1 text-xs text-slate-400">{t("empty.hint")}</div>
+            <div className="mt-1 text-xs text-muted">{t("empty.hint")}</div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -255,34 +255,34 @@ export default function StatsPage() {
                 tone="success"
               />
 
-              <div className="md:col-span-2 rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="md:col-span-2 rounded-3xl border border-border/70 bg-surface-2/80 p-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <div className="text-xs text-slate-400">{t("reviewed.label")}</div>
-                  <div className="mt-2 text-3xl font-bold tracking-tight text-slate-50">
+                  <div className="text-xs text-muted">{t("reviewed.label")}</div>
+                  <div className="mt-2 text-3xl font-bold tracking-tight text-foreground">
                     {stats.reviewed_cards ?? "..."}
                   </div>
-                  <div className="mt-2 text-[11px] text-slate-500">{t("reviewed.hint")}</div>
+                  <div className="mt-2 text-[11px] text-muted-faint">{t("reviewed.hint")}</div>
                 </div>
 
                 <div className="w-full md:w-[320px]">
-                  <div className="flex items-center justify-between text-[11px] text-slate-500">
+                  <div className="flex items-center justify-between text-[11px] text-muted-faint">
                     <span>{t("progress.label")}</span>
-                    <span className="text-slate-300">{completionHint?.text ?? ""}</span>
+                    <span className="text-muted-strong">{completionHint?.text ?? ""}</span>
                   </div>
-                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-900/60 border border-slate-800">
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface-2/80 border border-border">
                     <div
                       className="h-full bg-emerald-500/70 transition-all duration-300"
                       style={{ width: `${completionHint?.pct ?? 0}%` }}
                     />
                   </div>
-                  <div className="mt-2 text-[11px] text-slate-600">{t("progress.tip")}</div>
+                  <div className="mt-2 text-[11px] text-muted-faint">{t("progress.tip")}</div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
+            <div className="rounded-2xl border border-border/70 bg-surface-2/60 p-4">
               <div className="text-sm font-semibold">{t("next.title")}</div>
-              <div className="mt-1 text-xs text-slate-400">{t("next.hint")}</div>
+              <div className="mt-1 text-xs text-muted">{t("next.hint")}</div>
             </div>
           </div>
         )}

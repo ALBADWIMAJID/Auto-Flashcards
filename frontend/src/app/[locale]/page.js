@@ -47,7 +47,7 @@ function Badge({ tone = "default", children }) {
       ? "border-sky-500/30 bg-sky-950/40 text-sky-200"
       : tone === "warn"
       ? "border-amber-500/30 bg-amber-950/40 text-amber-200"
-      : "border-slate-700 bg-slate-900/60 text-slate-200";
+      : "border-border-strong bg-surface-2/80 text-foreground";
 
   return (
     <span
@@ -66,9 +66,9 @@ function Button({ variant = "primary", loading, className, children, ...props })
     variant === "primary"
       ? "bg-sky-600 hover:bg-sky-500 text-white"
       : variant === "secondary"
-      ? "bg-slate-900/60 hover:bg-slate-800/70 text-slate-100 border border-slate-800"
+      ? "bg-surface-2/80 hover:bg-surface-3/80 text-foreground border border-border"
       : variant === "ghost"
-      ? "bg-transparent hover:bg-slate-900/60 text-slate-200 border border-slate-800/70"
+      ? "bg-transparent hover:bg-surface-2/80 text-foreground border border-border/70"
       : "bg-emerald-600 hover:bg-emerald-500 text-white";
 
   return (
@@ -93,8 +93,8 @@ function ButtonLink({ href, variant = "primary", className, children }) {
     variant === "primary"
       ? "bg-sky-600 hover:bg-sky-500 text-white"
       : variant === "secondary"
-      ? "bg-slate-900/60 hover:bg-slate-800/70 text-slate-100 border border-slate-800"
-      : "bg-transparent hover:bg-slate-900/60 text-slate-200 border border-slate-800/70";
+      ? "bg-surface-2/80 hover:bg-surface-3/80 text-foreground border border-border"
+      : "bg-transparent hover:bg-surface-2/80 text-foreground border border-border/70";
 
   return (
     <Link
@@ -114,7 +114,7 @@ function ButtonLink({ href, variant = "primary", className, children }) {
 function Spinner() {
   return (
     <span
-      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-200/20 border-t-slate-200/80"
+      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-border/40 border-t-foreground/80"
       aria-hidden="true"
     />
   );
@@ -122,11 +122,11 @@ function Spinner() {
 
 function CardShell({ title, subtitle, right, children }) {
   return (
-    <section className="rounded-3xl border border-slate-800/70 bg-slate-900/40 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
-      <div className="flex flex-col gap-3 border-b border-slate-800/60 px-5 py-4 md:flex-row md:items-start md:justify-between">
+    <section className="rounded-3xl border border-border/70 bg-surface-1/80 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+      <div className="flex flex-col gap-3 border-b border-border/60 px-5 py-4 md:flex-row md:items-start md:justify-between">
         <div className="space-y-1">
           <h2 className="text-base md:text-lg font-semibold tracking-tight">{title}</h2>
-          {subtitle ? <p className="text-xs md:text-sm text-slate-400">{subtitle}</p> : null}
+          {subtitle ? <p className="text-xs md:text-sm text-muted">{subtitle}</p> : null}
         </div>
         {right ? <div className="shrink-0">{right}</div> : null}
       </div>
@@ -137,23 +137,23 @@ function CardShell({ title, subtitle, right, children }) {
 
 function FeatureCard({ title, description }) {
   return (
-    <div className="rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5">
+    <div className="rounded-3xl border border-border/70 bg-surface-2/80 p-5">
       <div className="text-sm font-semibold">{title}</div>
-      <div className="mt-2 text-xs text-slate-400">{description}</div>
+      <div className="mt-2 text-xs text-muted">{description}</div>
     </div>
   );
 }
 
 function StepCard({ step, title, description, href, cta }) {
   return (
-    <div className="rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5">
+    <div className="rounded-3xl border border-border/70 bg-surface-2/80 p-5">
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-700 bg-slate-900/60 text-xs font-semibold">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border-strong bg-surface-2/80 text-xs font-semibold">
           {step}
         </div>
         <div>
           <div className="text-sm font-semibold">{title}</div>
-          <div className="mt-1 text-xs text-slate-400">{description}</div>
+          <div className="mt-1 text-xs text-muted">{description}</div>
         </div>
       </div>
       {href ? (
@@ -172,8 +172,8 @@ function Field({ label, hint, children }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-end justify-between gap-3">
-        <label className="text-xs font-medium text-slate-200">{label}</label>
-        {hint ? <span className="text-[11px] text-slate-500">{hint}</span> : null}
+        <label className="text-xs font-medium text-foreground">{label}</label>
+        {hint ? <span className="text-[11px] text-muted-faint">{hint}</span> : null}
       </div>
       {children}
     </div>
@@ -185,9 +185,9 @@ function Input(props) {
     <input
       {...props}
       className={cx(
-        "w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100",
+        "w-full rounded-2xl border border-border bg-surface-3/80 px-3 py-2 text-sm text-foreground",
         "outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/15",
-        "placeholder:text-slate-600",
+        "placeholder:text-muted-faint",
         props.className
       )}
     />
@@ -199,9 +199,9 @@ function Textarea(props) {
     <textarea
       {...props}
       className={cx(
-        "w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100",
+        "w-full rounded-2xl border border-border bg-surface-3/80 px-3 py-2 text-sm text-foreground",
         "outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/15",
-        "placeholder:text-slate-600",
+        "placeholder:text-muted-faint",
         props.className
       )}
     />
@@ -250,7 +250,7 @@ function SkeletonList() {
       {[0, 1, 2, 3].map((i) => (
         <div
           key={i}
-          className="h-14 w-full animate-pulse rounded-2xl border border-slate-800/70 bg-slate-950/50"
+          className="h-14 w-full animate-pulse rounded-2xl border border-border/70 bg-surface-2/80"
         />
       ))}
     </div>
@@ -441,7 +441,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-10">
-      <section className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/40 p-6 md:p-10">
+      <section className="relative overflow-hidden rounded-3xl border border-border/70 bg-surface-1/80 p-6 md:p-10">
         <div aria-hidden="true" className="absolute inset-0">
           <div className="absolute -top-24 right-8 h-56 w-56 rounded-full bg-sky-500/10 blur-3xl" />
           <div className="absolute -bottom-20 left-8 h-56 w-56 rounded-full bg-emerald-500/10 blur-3xl" />
@@ -457,7 +457,7 @@ export default function HomePage() {
 
             <div className="space-y-3">
               <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{t("hero.title")}</h1>
-              <p className="text-sm md:text-base text-slate-300">{t("hero.subtitle")}</p>
+              <p className="text-sm md:text-base text-muted-strong">{t("hero.subtitle")}</p>
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -478,46 +478,46 @@ export default function HomePage() {
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
               <span>
-                {t("hero.apiLabel")}: <span className="text-slate-200">{API_BASE_URL}</span>
+                {t("hero.apiLabel")}: <span className="text-foreground">{API_BASE_URL}</span>
               </span>
-              <span className="h-1 w-1 rounded-full bg-slate-600" />
+              <span className="h-1 w-1 rounded-full bg-muted-faint" />
               <span>{isAuthed ? t("hero.signedInAs", { user: userLabel }) : t("hero.signedOut")}</span>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-5 md:p-6">
+          <div className="rounded-3xl border border-border/70 bg-surface-3/80 p-5 md:p-6">
             <div className="flex items-center justify-between">
               <div className="text-sm font-semibold">{t("quickStart.title")}</div>
               <Badge tone="warn">{t("quickStart.badge")}</Badge>
             </div>
             <div className="mt-4 space-y-3">
-              <div className="flex items-start gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/40 p-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900/60 text-xs font-semibold">
+              <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-surface-2/70 p-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-border-strong bg-surface-2/80 text-xs font-semibold">
                   1
                 </span>
                 <div>
                   <div className="text-sm font-semibold">{t("quickStart.steps.oneTitle")}</div>
-                  <div className="text-xs text-slate-400">{t("quickStart.steps.oneDesc")}</div>
+                  <div className="text-xs text-muted">{t("quickStart.steps.oneDesc")}</div>
                 </div>
               </div>
-              <div className="flex items-start gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/40 p-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900/60 text-xs font-semibold">
+              <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-surface-2/70 p-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-border-strong bg-surface-2/80 text-xs font-semibold">
                   2
                 </span>
                 <div>
                   <div className="text-sm font-semibold">{t("quickStart.steps.twoTitle")}</div>
-                  <div className="text-xs text-slate-400">{t("quickStart.steps.twoDesc")}</div>
+                  <div className="text-xs text-muted">{t("quickStart.steps.twoDesc")}</div>
                 </div>
               </div>
-              <div className="flex items-start gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/40 p-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900/60 text-xs font-semibold">
+              <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-surface-2/70 p-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-border-strong bg-surface-2/80 text-xs font-semibold">
                   3
                 </span>
                 <div>
                   <div className="text-sm font-semibold">{t("quickStart.steps.threeTitle")}</div>
-                  <div className="text-xs text-slate-400">{t("quickStart.steps.threeDesc")}</div>
+                  <div className="text-xs text-muted">{t("quickStart.steps.threeDesc")}</div>
                 </div>
               </div>
             </div>
@@ -537,7 +537,7 @@ export default function HomePage() {
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div className="space-y-1">
             <h2 className="text-xl md:text-2xl font-semibold tracking-tight">{t("howItWorks.title")}</h2>
-            <p className="text-sm text-slate-400">{t("howItWorks.subtitle")}</p>
+            <p className="text-sm text-muted">{t("howItWorks.subtitle")}</p>
           </div>
           <ButtonLink href="/register" variant="secondary">
             {t("howItWorks.cta")}
@@ -585,7 +585,7 @@ export default function HomePage() {
       <section id="quickstart" className="space-y-6">
         <div className="space-y-2">
           <h2 className="text-xl md:text-2xl font-semibold tracking-tight">{t("lab.title")}</h2>
-          <p className="text-sm text-slate-400">{t("lab.subtitle")}</p>
+          <p className="text-sm text-muted">{t("lab.subtitle")}</p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
@@ -593,8 +593,8 @@ export default function HomePage() {
             title={t("generator.title")}
             subtitle={t("generator.subtitle")}
             right={
-              <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
-                POST <span className="text-slate-200">/ai/generate</span>
+              <span className="rounded-full border border-border bg-surface-2/70 px-3 py-1 text-[11px] text-muted">
+                POST <span className="text-foreground">/ai/generate</span>
               </span>
             }
           >
@@ -651,7 +651,7 @@ export default function HomePage() {
                   {[0, 1, 2].map((i) => (
                     <div
                       key={i}
-                      className="h-16 w-full animate-pulse rounded-2xl border border-slate-800/70 bg-slate-950/50"
+                      className="h-16 w-full animate-pulse rounded-2xl border border-border/70 bg-surface-2/80"
                     />
                   ))}
                 </div>
@@ -660,25 +660,25 @@ export default function HomePage() {
                   {cards.map((c, i) => (
                     <div
                       key={i}
-                      className="rounded-2xl border border-slate-800/70 bg-slate-950/50 p-4"
+                      className="rounded-2xl border border-border/70 bg-surface-2/80 p-4"
                     >
                       <div className="flex items-start justify-between gap-4">
-                        <div className="text-xs text-slate-400">{t("generator.cardLabel", { index: i + 1 })}</div>
-                        <span className="rounded-full border border-slate-800 bg-slate-900/40 px-2 py-0.5 text-[11px] text-slate-400">
+                        <div className="text-xs text-muted">{t("generator.cardLabel", { index: i + 1 })}</div>
+                        <span className="rounded-full border border-border bg-surface-1/80 px-2 py-0.5 text-[11px] text-muted">
                           {t("generator.qa")}
                         </span>
                       </div>
-                      <div className="mt-2 text-sm font-semibold text-slate-50">{c.question}</div>
-                      <div className="mt-2 text-sm text-slate-300">{c.answer}</div>
+                      <div className="mt-2 text-sm font-semibold text-foreground">{c.question}</div>
+                      <div className="mt-2 text-sm text-muted-strong">{c.answer}</div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
+                <div className="rounded-2xl border border-border/70 bg-surface-2/60 p-4">
                   <div className="text-sm font-semibold">{t("generator.noResultsTitle")}</div>
-                  <div className="mt-1 text-xs text-slate-400">
+                  <div className="mt-1 text-xs text-muted">
                     {t.rich("generator.noResultsHint", {
-                      strong: (chunks) => <span className="text-slate-200">{chunks}</span>,
+                      strong: (chunks) => <span className="text-foreground">{chunks}</span>,
                     })}
                   </div>
                 </div>
@@ -691,8 +691,8 @@ export default function HomePage() {
             subtitle={t("decks.subtitle")}
             right={
               <div className="flex items-center gap-2">
-                <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
-                  GET/POST <span className="text-slate-200">/decks/</span>
+                <span className="rounded-full border border-border bg-surface-2/70 px-3 py-1 text-[11px] text-muted">
+                  GET/POST <span className="text-foreground">/decks/</span>
                 </span>
                 <Button
                   variant="secondary"
@@ -732,7 +732,7 @@ export default function HomePage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold">{t("decks.createTitle")}</h3>
-                  <span className="text-[11px] text-slate-500">{t("decks.titleRequired")}</span>
+                  <span className="text-[11px] text-muted-faint">{t("decks.titleRequired")}</span>
                 </div>
 
                 <Field label={t("decks.titleLabel")}>
@@ -772,7 +772,7 @@ export default function HomePage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold">{t("decks.listTitle")}</h3>
-                  <span className="text-[11px] text-slate-500">
+                  <span className="text-[11px] text-muted-faint">
                     {isAuthed ? t("decks.totalCount", { count: decks.length }) : ""}
                   </span>
                 </div>
@@ -784,12 +784,12 @@ export default function HomePage() {
                     {decks.map((d) => (
                       <div
                         key={d.id}
-                        className="group rounded-2xl border border-slate-800/70 bg-slate-950/50 p-4 hover:bg-slate-950/70 transition"
+                        className="group rounded-2xl border border-border/70 bg-surface-2/80 p-4 hover:bg-background/70 transition"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <div className="text-sm font-semibold">{d.title}</div>
-                            <div className="mt-1 text-[11px] text-slate-500">
+                            <div className="mt-1 text-[11px] text-muted-faint">
                               {t("decks.idLabel", {
                                 id: truncateMiddle(String(d.id), 8, 8),
                               })}
@@ -797,7 +797,7 @@ export default function HomePage() {
                           </div>
                           <Link
                             href="/profile"
-                            className="rounded-xl border border-slate-800 bg-slate-900/30 px-2.5 py-1 text-[11px] text-slate-300 opacity-0 group-hover:opacity-100 transition hover:bg-slate-800/60"
+                            className="rounded-xl border border-border bg-surface-1/70 px-2.5 py-1 text-[11px] text-muted-strong opacity-0 group-hover:opacity-100 transition hover:bg-surface-3/80"
                           >
                             {t("decks.manage")}
                           </Link>
@@ -806,9 +806,9 @@ export default function HomePage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
+                  <div className="rounded-2xl border border-border/70 bg-surface-2/60 p-4">
                     <div className="text-sm font-semibold">{t("decks.noDecksTitle")}</div>
-                    <div className="mt-1 text-xs text-slate-400">{t("decks.noDecksHint")}</div>
+                    <div className="mt-1 text-xs text-muted">{t("decks.noDecksHint")}</div>
                   </div>
                 )}
               </div>
@@ -817,11 +817,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-800/70 bg-slate-900/40 p-6 md:p-8">
+      <section className="rounded-3xl border border-border/70 bg-surface-1/80 p-6 md:p-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-1">
             <h2 className="text-xl md:text-2xl font-semibold tracking-tight">{t("cta.title")}</h2>
-            <p className="text-sm text-slate-400">{t("cta.subtitle")}</p>
+            <p className="text-sm text-muted">{t("cta.subtitle")}</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <ButtonLink href="/register" variant="primary">
@@ -834,7 +834,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="pb-4 text-center text-xs text-slate-500">{t("footer")}</footer>
+      <footer className="pb-4 text-center text-xs text-muted-faint">{t("footer")}</footer>
 
       <Toast toast={toast} onClose={() => setToast(null)} closeLabel={t("toast.close")} />
     </div>

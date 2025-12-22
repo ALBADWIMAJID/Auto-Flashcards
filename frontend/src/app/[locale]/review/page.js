@@ -15,7 +15,7 @@ function cx(...classes) {
 function Spinner() {
   return (
     <span
-      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-200/20 border-t-slate-200/80"
+      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-border/40 border-t-foreground/80"
       aria-hidden="true"
     />
   );
@@ -24,14 +24,14 @@ function Spinner() {
 function Button({ variant = "primary", loading, className, children, ...props }) {
   const styles =
     variant === "primary"
-      ? "bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800"
+      ? "bg-sky-600 hover:bg-sky-500 disabled:bg-surface-3"
       : variant === "secondary"
-      ? "bg-slate-900/60 hover:bg-slate-800/70 border border-slate-800"
+      ? "bg-surface-2/80 hover:bg-surface-3/80 border border-border"
       : variant === "danger"
-      ? "bg-rose-600 hover:bg-rose-500 disabled:bg-slate-800"
+      ? "bg-rose-600 hover:bg-rose-500 disabled:bg-surface-3"
       : variant === "warn"
-      ? "bg-amber-500 hover:bg-amber-400 disabled:bg-slate-800"
-      : "bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800";
+      ? "bg-amber-500 hover:bg-amber-400 disabled:bg-surface-3"
+      : "bg-emerald-600 hover:bg-emerald-500 disabled:bg-surface-3";
 
   return (
     <button
@@ -55,7 +55,7 @@ function Select({ className, ...props }) {
     <select
       {...props}
       className={cx(
-        "w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100",
+        "w-full rounded-2xl border border-border bg-surface-3/80 px-3 py-2 text-sm text-foreground",
         "outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/15",
         className
       )}
@@ -81,11 +81,11 @@ function Alert({ type = "error", title, children }) {
 
 function CardShell({ title, subtitle, right, children }) {
   return (
-    <section className="rounded-3xl border border-slate-800/70 bg-slate-900/40 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
-      <div className="flex flex-col gap-3 border-b border-slate-800/60 px-5 py-4 md:flex-row md:items-start md:justify-between">
+    <section className="rounded-3xl border border-border/70 bg-surface-1/80 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+      <div className="flex flex-col gap-3 border-b border-border/60 px-5 py-4 md:flex-row md:items-start md:justify-between">
         <div className="space-y-1">
           <h2 className="text-base md:text-lg font-semibold tracking-tight">{title}</h2>
-          {subtitle ? <p className="text-xs md:text-sm text-slate-400">{subtitle}</p> : null}
+          {subtitle ? <p className="text-xs md:text-sm text-muted">{subtitle}</p> : null}
         </div>
         {right ? <div className="shrink-0">{right}</div> : null}
       </div>
@@ -96,7 +96,7 @@ function CardShell({ title, subtitle, right, children }) {
 
 function SkeletonBlock({ h = "h-12" }) {
   return (
-    <div className={cx("w-full animate-pulse rounded-2xl border border-slate-800/70 bg-slate-950/50", h)} />
+    <div className={cx("w-full animate-pulse rounded-2xl border border-border/70 bg-surface-2/80", h)} />
   );
 }
 
@@ -279,15 +279,15 @@ export default function ReviewPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-800/70 bg-slate-900/30 p-6 md:p-8">
+      <div className="rounded-3xl border border-border/70 bg-surface-1/70 p-6 md:p-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div className="space-y-1">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              {t("header.title")} <span className="text-slate-400 text-base">(UC-3)</span>
+              {t("header.title")} <span className="text-muted text-base">(UC-3)</span>
             </h1>
-            <p className="text-sm text-slate-300">{t("header.subtitle")}</p>
-            <div className="mt-2 text-xs text-slate-500">
-              {t("header.apiLabel")}: <span className="text-slate-300">{API_BASE}</span> -{" "}
+            <p className="text-sm text-muted-strong">{t("header.subtitle")}</p>
+            <div className="mt-2 text-xs text-muted-faint">
+              {t("header.apiLabel")}: <span className="text-muted-strong">{API_BASE}</span> -{" "}
               <span className="text-emerald-300">{t("header.authRequired")}</span>
             </div>
           </div>
@@ -327,8 +327,8 @@ export default function ReviewPage() {
           title={t("deck.title")}
           subtitle={t("deck.subtitle")}
           right={
-            <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
-              GET <span className="text-slate-200">/decks/</span>
+            <span className="rounded-full border border-border bg-surface-2/70 px-3 py-1 text-[11px] text-muted">
+              GET <span className="text-foreground">/decks/</span>
             </span>
           }
         >
@@ -354,8 +354,8 @@ export default function ReviewPage() {
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <div className="flex items-end justify-between gap-3">
-                  <label className="text-xs font-medium text-slate-200">{t("deck.availableLabel")}</label>
-                  <span className="text-[11px] text-slate-500">{t("deck.totalCount", { count: decks.length })}</span>
+                  <label className="text-xs font-medium text-foreground">{t("deck.availableLabel")}</label>
+                  <span className="text-[11px] text-muted-faint">{t("deck.totalCount", { count: decks.length })}</span>
                 </div>
 
                 <Select
@@ -399,11 +399,11 @@ export default function ReviewPage() {
                 </Button>
               </div>
 
-              <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
+              <div className="rounded-2xl border border-border/70 bg-surface-2/60 p-4">
                 <div className="text-sm font-semibold">{t("deck.tipTitle")}</div>
-                <div className="mt-1 text-xs text-slate-400">
+                <div className="mt-1 text-xs text-muted">
                   {t.rich("deck.tipBody", {
-                    strong: (chunks) => <span className="text-slate-200">{chunks}</span>,
+                    strong: (chunks) => <span className="text-foreground">{chunks}</span>,
                   })}
                 </div>
               </div>
@@ -415,8 +415,8 @@ export default function ReviewPage() {
           title={t("card.title")}
           subtitle={t("card.subtitle")}
           right={
-            <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
-              GET/POST <span className="text-slate-200">/review</span>
+            <span className="rounded-full border border-border bg-surface-2/70 px-3 py-1 text-[11px] text-muted">
+              GET/POST <span className="text-foreground">/review</span>
             </span>
           }
         >
@@ -427,46 +427,46 @@ export default function ReviewPage() {
               <SkeletonBlock h="h-10" />
             </div>
           ) : !currentCard ? (
-            <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
+            <div className="rounded-2xl border border-border/70 bg-surface-2/60 p-4">
               <div className="text-sm font-semibold">{t("card.emptyTitle")}</div>
-              <div className="mt-1 text-xs text-slate-400">
+              <div className="mt-1 text-xs text-muted">
                 {selectedDeckId ? t("card.emptyHintWithDeck") : t("card.emptyHintNoDeck")}
               </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5">
-                <div className="flex items-center justify-between text-[11px] text-slate-400">
+              <div className="rounded-3xl border border-border/70 bg-surface-2/80 p-5">
+                <div className="flex items-center justify-between text-[11px] text-muted">
                   <span>{t("card.deckLabel", { deck: activeDeck?.title || selectedDeckId })}</span>
                   <span>{t("card.cardLabel", { id: currentCard.id })}</span>
                 </div>
 
                 <div className="mt-4">
-                  <div className="text-xs font-semibold text-slate-400">{t("card.questionLabel")}</div>
-                  <div className="mt-1 text-base font-semibold text-slate-50">{currentCard.question}</div>
+                  <div className="text-xs font-semibold text-muted">{t("card.questionLabel")}</div>
+                  <div className="mt-1 text-base font-semibold text-foreground">{currentCard.question}</div>
                 </div>
 
                 <div className="mt-4">
                   <button
                     type="button"
                     onClick={() => setShowAnswer((v) => !v)}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/40 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/60 transition"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-border bg-surface-1/80 px-3 py-2 text-sm text-foreground hover:bg-surface-3/80 transition"
                   >
                     {showAnswer ? t("card.hideAnswer") : t("card.showAnswer")}
                   </button>
 
                   {showAnswer ? (
-                    <div className="mt-3 rounded-2xl border border-slate-800/70 bg-slate-900/40 p-4 text-sm text-slate-200">
+                    <div className="mt-3 rounded-2xl border border-border/70 bg-surface-1/80 p-4 text-sm text-foreground">
                       {currentCard.answer}
                     </div>
                   ) : (
-                    <div className="mt-3 text-xs text-slate-500">{t("card.revealHint")}</div>
+                    <div className="mt-3 text-xs text-muted-faint">{t("card.revealHint")}</div>
                   )}
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-slate-800/70 bg-slate-950/40 p-4">
-                <div className="text-xs font-semibold text-slate-300 mb-3">{t("grade.title")}</div>
+              <div className="rounded-3xl border border-border/70 bg-surface-2/70 p-4">
+                <div className="text-xs font-semibold text-muted-strong mb-3">{t("grade.title")}</div>
 
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Button variant="danger" disabled={submitting} loading={submitting} onClick={() => handleAnswer(0)}>
@@ -486,25 +486,25 @@ export default function ReviewPage() {
                   </Button>
                 </div>
 
-                <div className="mt-3 text-[11px] text-slate-500">
+                <div className="mt-3 text-[11px] text-muted-faint">
                   {t.rich("grade.hint", {
-                    strong: (chunks) => <span className="text-slate-300">{chunks}</span>,
+                    strong: (chunks) => <span className="text-muted-strong">{chunks}</span>,
                   })}
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-slate-800/70 bg-slate-950/40 p-4">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
+              <div className="rounded-3xl border border-border/70 bg-surface-2/70 p-4">
+                <div className="flex items-center justify-between text-xs font-semibold text-muted-strong">
                   <span>{t("session.title")}</span>
-                  <span className="text-slate-400">{t("session.count", { count: sessionCount })}</span>
+                  <span className="text-muted">{t("session.count", { count: sessionCount })}</span>
                 </div>
-                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-900">
+                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface-2">
                   <div
                     className="h-full rounded-full bg-sky-500 transition-all duration-300"
                     style={{ width: `${Math.min(sessionCount * 12, 100)}%` }}
                   />
                 </div>
-                <div className="mt-2 text-[11px] text-slate-500">{t("session.hint")}</div>
+                <div className="mt-2 text-[11px] text-muted-faint">{t("session.hint")}</div>
               </div>
             </div>
           )}

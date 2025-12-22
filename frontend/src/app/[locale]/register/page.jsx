@@ -13,15 +13,15 @@ function Input({ label, hint, className, ...props }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-end justify-between gap-3">
-        <label className="text-xs font-medium text-slate-200">{label}</label>
-        {hint ? <span className="text-[11px] text-slate-500">{hint}</span> : null}
+        <label className="text-xs font-medium text-foreground">{label}</label>
+        {hint ? <span className="text-[11px] text-muted-faint">{hint}</span> : null}
       </div>
       <input
         {...props}
         className={cx(
-          "w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100",
+          "w-full rounded-2xl border border-border bg-surface-3/80 px-3 py-2 text-sm text-foreground",
           "outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/15",
-          "placeholder:text-slate-600",
+          "placeholder:text-muted-faint",
           className
         )}
       />
@@ -32,8 +32,8 @@ function Input({ label, hint, className, ...props }) {
 function Button({ variant = "primary", loading, className, children, ...props }) {
   const styles =
     variant === "primary"
-      ? "bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800"
-      : "bg-slate-900/60 hover:bg-slate-800/70 border border-slate-800";
+      ? "bg-sky-600 hover:bg-sky-500 disabled:bg-surface-3"
+      : "bg-surface-2/80 hover:bg-surface-3/80 border border-border";
 
   return (
     <button
@@ -143,7 +143,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50">
+    <main className="min-h-screen bg-background text-foreground">
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-sky-500/10 blur-3xl" />
         <div className="absolute -bottom-24 left-1/3 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl" />
@@ -151,15 +151,15 @@ export default function RegisterPage() {
 
       <div className="relative mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
-          <div className="rounded-3xl border border-slate-800/70 bg-slate-900/40 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
-            <div className="border-b border-slate-800/60 px-6 py-5">
+          <div className="rounded-3xl border border-border/70 bg-surface-1/80 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+            <div className="border-b border-border/60 px-6 py-5">
               <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-2xl border border-slate-800 bg-slate-950/40">
+                <div className="grid h-10 w-10 place-items-center rounded-2xl border border-border bg-surface-2/70">
                   <span className="text-sm font-bold tracking-tight">AF</span>
                 </div>
                 <div>
                   <h1 className="text-lg font-semibold tracking-tight">{t("title")}</h1>
-                  <p className="text-xs text-slate-400">{t("subtitle")}</p>
+                  <p className="text-xs text-muted">{t("subtitle")}</p>
                 </div>
               </div>
             </div>
@@ -186,8 +186,8 @@ export default function RegisterPage() {
 
               <div className="space-y-1.5">
                 <div className="flex items-end justify-between gap-3">
-                  <label className="text-xs font-medium text-slate-200">{t("passwordLabel")}</label>
-                  <span className="text-[11px] text-slate-500">{t("passwordHint")}</span>
+                  <label className="text-xs font-medium text-foreground">{t("passwordLabel")}</label>
+                  <span className="text-[11px] text-muted-faint">{t("passwordHint")}</span>
                 </div>
 
                 <div className="relative">
@@ -199,16 +199,16 @@ export default function RegisterPage() {
                     autoComplete="new-password"
                     placeholder={t("passwordPlaceholder")}
                     className={cx(
-                      "w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 pr-12 text-sm text-slate-100",
+                      "w-full rounded-2xl border border-border bg-surface-3/80 px-3 py-2 pr-12 text-sm text-foreground",
                       "outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/15",
-                      "placeholder:text-slate-600"
+                      "placeholder:text-muted-faint"
                     )}
                   />
 
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl border border-slate-800 bg-slate-900/40 px-2.5 py-1 text-[11px] text-slate-300 hover:bg-slate-800/60"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl border border-border bg-surface-1/80 px-2.5 py-1 text-[11px] text-muted-strong hover:bg-surface-3/80"
                     aria-label={showPassword ? t("hidePasswordAria") : t("showPasswordAria")}
                   >
                     {showPassword ? t("hide") : t("show")}
@@ -236,7 +236,7 @@ export default function RegisterPage() {
                 {t("alreadyAccount")}
               </Button>
 
-              <div className="pt-1 text-center text-xs text-slate-500">
+              <div className="pt-1 text-center text-xs text-muted-faint">
                 {t("footer")}{" "}
                 <Link href="/" className="text-sky-300 hover:underline">
                   {t("backHome")}
@@ -245,7 +245,7 @@ export default function RegisterPage() {
             </form>
           </div>
 
-          <div className="mt-4 text-center text-[11px] text-slate-600">
+          <div className="mt-4 text-center text-[11px] text-muted-faint">
             {t("confirmationNote")}
           </div>
         </div>

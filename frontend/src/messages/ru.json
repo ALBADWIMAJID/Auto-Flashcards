@@ -10,7 +10,10 @@
     "getStarted": "Начать",
     "menu": "Меню",
     "openMenu": "Открыть меню",
-    "language": "Язык"
+    "language": "Язык",
+    "themeToggle": "Переключить тему",
+    "themeLight": "Светлая",
+    "themeDark": "Темная"
   },
   "layout": {
     "footerLeft": "Auto-Flashcards MVP",
@@ -351,7 +354,7 @@
     "title": "Создать аккаунт",
     "subtitle": "Зарегистрируйтесь, чтобы создавать и повторять карточки.",
     "fullNameLabel": "Полное имя",
-    "fullNamePlaceholder": "например, Majid Albadwi",
+    "fullNamePlaceholder": "например, Majid ",
     "emailLabel": "Эл. почта",
     "emailPlaceholder": "you@example.com",
     "passwordLabel": "Пароль",

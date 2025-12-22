@@ -21,10 +21,27 @@ export const metadata = {
 export default async function RootLayout({ children }) {
   const locale = await getLocale();
   const dir = locale === "ar" ? "rtl" : "ltr";
+  const themeScript = `
+    (function () {
+      try {
+        var stored = localStorage.getItem("af-theme");
+        var theme =
+          stored === "light" || stored === "dark"
+            ? stored
+            : window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        document.documentElement.dataset.theme = theme;
+      } catch (e) {}
+    })();
+  `;
 
   return (
     <html lang={locale} dir={dir} suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased text-slate-50`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
         {children}
       </body>
     </html>

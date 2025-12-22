@@ -1,26 +1,67 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+  --background: #050b1a;
+  --foreground: #e2e8f0;
+  --surface-1: #0b1224;
+  --surface-2: #0f172a;
+  --surface-3: #111c31;
+  --surface-4: #0b1325;
+  --border: #1f2a44;
+  --border-strong: #2b3b55;
+  --muted: #94a3b8;
+  --muted-strong: #cbd5e1;
+  --muted-faint: #64748b;
+  --ring: rgba(56, 189, 248, 0.35);
+  --glow-1: rgba(56, 189, 248, 0.14);
+  --glow-2: rgba(16, 185, 129, 0.12);
+  --glow-3: rgba(99, 102, 241, 0.12);
+  --overlay-from: rgba(2, 6, 23, 0.85);
+  --overlay-to: rgba(2, 6, 23, 1);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --surface-1: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+  --surface-4: #dbe2ea;
+  --border: #cbd5e1;
+  --border-strong: #94a3b8;
+  --muted: #475569;
+  --muted-strong: #1f2937;
+  --muted-faint: #64748b;
+  --ring: rgba(2, 132, 199, 0.25);
+  --glow-1: rgba(56, 189, 248, 0.2);
+  --glow-2: rgba(16, 185, 129, 0.16);
+  --glow-3: rgba(99, 102, 241, 0.12);
+  --overlay-from: rgba(248, 250, 252, 0.9);
+  --overlay-to: rgba(248, 250, 252, 1);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-muted: var(--muted);
+  --color-muted-strong: var(--muted-strong);
+  --color-muted-faint: var(--muted-faint);
+  --color-ring: var(--ring);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), sans-serif;
+  transition: background-color 200ms ease, color 200ms ease;
 }

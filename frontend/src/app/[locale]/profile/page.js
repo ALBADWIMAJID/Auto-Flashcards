@@ -277,13 +277,13 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-surface-2 to-background px-4">
         <div className="text-center">
           <div className="relative w-20 h-20 mx-auto mb-6">
             <div className="absolute inset-0 border-4 border-violet-500/30 rounded-full"></div>
             <div className="absolute inset-0 border-4 border-transparent border-t-violet-500 rounded-full animate-spin"></div>
           </div>
-          <p className="text-slate-300 text-lg font-medium">{t("loading")}</p>
+          <p className="text-muted-strong text-lg font-medium">{t("loading")}</p>
         </div>
       </div>
     );
@@ -292,7 +292,7 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-background via-surface-2 to-background">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 -left-20 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div
@@ -301,7 +301,7 @@ export default function ProfilePage() {
         ></div>
       </div>
 
-      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-slate-700/50 shadow-lg">
+      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-surface-2/90 border-b border-border-strong/60 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
@@ -316,7 +316,7 @@ export default function ProfilePage() {
             </div>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 rounded-lg border border-slate-600 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white transition-all duration-200 flex items-center gap-2"
+              className="px-4 py-2 rounded-lg border border-border-strong bg-surface-3/70 hover:bg-surface-4/60 text-muted-strong hover:text-foreground transition-all duration-200 flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -328,22 +328,22 @@ export default function ProfilePage() {
       </nav>
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <header className="mb-6 sm:mb-8 p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl border border-slate-700/50 shadow-xl">
+        <header className="mb-6 sm:mb-8 p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-surface-3/80 to-surface-2/90 backdrop-blur-xl border border-border-strong/60 shadow-xl">
           <div className="flex items-center gap-4 mb-3">
             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-2xl sm:text-3xl shadow-lg">
               AF
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">
                 {t("welcome", { name: user.user_metadata?.full_name || t("fallbackName") })}
               </h1>
-              <p className="text-slate-400 text-sm sm:text-base">{user.email}</p>
+              <p className="text-muted text-sm sm:text-base">{user.email}</p>
             </div>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="p-6 sm:p-8 rounded-2xl bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 shadow-xl hover:border-violet-500/50 transition-all duration-300">
+          <div className="p-6 sm:p-8 rounded-2xl bg-surface-3/90 backdrop-blur-xl border border-border-strong/60 shadow-xl hover:border-violet-500/50 transition-all duration-300">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center">
                 <svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -351,14 +351,14 @@ export default function ProfilePage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-bold text-white">{t("createDeck.title")}</h2>
-                <p className="text-slate-400 text-xs sm:text-sm">{t("createDeck.subtitle")}</p>
+                <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("createDeck.title")}</h2>
+                <p className="text-muted text-xs sm:text-sm">{t("createDeck.subtitle")}</p>
               </div>
             </div>
 
             <form onSubmit={handleCreateDeck} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-muted-strong mb-2">
                   {t("createDeck.titleLabel")}
                 </label>
                 <input
@@ -367,12 +367,12 @@ export default function ProfilePage() {
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder={t("createDeck.titlePlaceholder")}
-                  className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-slate-600 bg-slate-950/50 text-white placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                  className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-border-strong bg-surface-2/80 text-foreground placeholder:text-muted-faint outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-muted-strong mb-2">
                   {t("createDeck.descriptionLabel")}
                 </label>
                 <textarea
@@ -380,7 +380,7 @@ export default function ProfilePage() {
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   placeholder={t("createDeck.descriptionPlaceholder")}
-                  className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-slate-600 bg-slate-950/50 text-white placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all resize-none"
+                  className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-border-strong bg-surface-2/80 text-foreground placeholder:text-muted-faint outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all resize-none"
                 />
               </div>
 
@@ -396,7 +396,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={creating}
-                className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 disabled:from-slate-700 disabled:to-slate-700 text-white font-semibold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 disabled:from-surface-4 disabled:to-surface-4 text-white font-semibold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {creating ? (
                   <>
@@ -418,7 +418,7 @@ export default function ProfilePage() {
             </form>
           </div>
 
-          <div className="p-6 sm:p-8 rounded-2xl bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 shadow-xl hover:border-blue-500/50 transition-all duration-300">
+          <div className="p-6 sm:p-8 rounded-2xl bg-surface-3/90 backdrop-blur-xl border border-border-strong/60 shadow-xl hover:border-blue-500/50 transition-all duration-300">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
                 <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -426,8 +426,8 @@ export default function ProfilePage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-bold text-white">{t("upload.title")}</h2>
-                <p className="text-slate-400 text-xs sm:text-sm">{t("upload.subtitle")}</p>
+                <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("upload.title")}</h2>
+                <p className="text-muted text-xs sm:text-sm">{t("upload.subtitle")}</p>
               </div>
             </div>
 
@@ -441,15 +441,15 @@ export default function ProfilePage() {
                     setUploadError("");
                     setUploadMessage("");
                   }}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-slate-600 bg-slate-950/50 text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500/20 file:text-blue-400 file:font-medium hover:border-blue-500/50 transition-all cursor-pointer"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-border-strong bg-surface-2/80 text-muted-strong file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500/20 file:text-blue-400 file:font-medium hover:border-blue-500/50 transition-all cursor-pointer"
                 />
-                <p className="mt-2 text-xs text-slate-500">{t("upload.supported")}</p>
+                <p className="mt-2 text-xs text-muted-faint">{t("upload.supported")}</p>
               </div>
 
               <button
                 type="submit"
                 disabled={uploading || !selectedFile}
-                className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 disabled:from-slate-700 disabled:to-slate-700 text-white font-semibold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 disabled:from-surface-4 disabled:to-surface-4 text-white font-semibold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {uploading ? (
                   <>
@@ -510,7 +510,7 @@ export default function ProfilePage() {
           </div>
         )}
 
-        <section className="p-6 sm:p-8 rounded-2xl bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 shadow-xl">
+        <section className="p-6 sm:p-8 rounded-2xl bg-surface-3/90 backdrop-blur-xl border border-border-strong/60 shadow-xl">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -518,35 +518,35 @@ export default function ProfilePage() {
               </svg>
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-white">{t("collection.title")}</h2>
-              <p className="text-slate-400 text-sm">{t("collection.count", { count: decks.length })}</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">{t("collection.title")}</h2>
+              <p className="text-muted text-sm">{t("collection.count", { count: decks.length })}</p>
             </div>
           </div>
 
           {decks.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-slate-700/50 flex items-center justify-center">
-                <svg className="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-surface-4/60 flex items-center justify-center">
+                <svg className="w-10 h-10 text-muted-faint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                 </svg>
               </div>
-              <p className="text-slate-400 text-lg">{t("collection.emptyTitle")}</p>
-              <p className="text-slate-500 text-sm mt-2">{t("collection.emptyHint")}</p>
+              <p className="text-muted text-lg">{t("collection.emptyTitle")}</p>
+              <p className="text-muted-faint text-sm mt-2">{t("collection.emptyHint")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {decks.map((deck) => (
                 <div
                   key={deck.id}
-                  className="group p-6 rounded-xl bg-slate-900/80 border border-slate-700 hover:border-violet-500/50 shadow-lg hover:shadow-violet-500/20 transition-all duration-300 hover:scale-[1.02]"
+                  className="group p-6 rounded-xl bg-surface-2/90 border border-border-strong hover:border-violet-500/50 shadow-lg hover:shadow-violet-500/20 transition-all duration-300 hover:scale-[1.02]"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">
+                      <h3 className="text-lg font-bold text-foreground mb-1 line-clamp-2">
                         {deck.title}
                       </h3>
                       {deck.description && (
-                        <p className="text-slate-400 text-sm line-clamp-2">{deck.description}</p>
+                        <p className="text-muted text-sm line-clamp-2">{deck.description}</p>
                       )}
                     </div>
                     <div className="ml-3 w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
@@ -556,7 +556,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 mb-4 text-sm text-slate-400">
+                  <div className="flex items-center gap-2 mb-4 text-sm text-muted">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
@@ -566,7 +566,7 @@ export default function ProfilePage() {
                   <button
                     onClick={() => handleGenerateFromUpload(deck.id)}
                     disabled={generatingDeckId === deck.id}
-                    className="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 disabled:from-slate-700 disabled:to-slate-700 text-white text-sm font-semibold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 disabled:from-surface-4 disabled:to-surface-4 text-white text-sm font-semibold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {generatingDeckId === deck.id ? (
                       <>

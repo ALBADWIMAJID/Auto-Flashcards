@@ -10,7 +10,10 @@
     "getStarted": "Get started",
     "menu": "Menu",
     "openMenu": "Open menu",
-    "language": "Language"
+    "language": "Language",
+    "themeToggle": "Toggle theme",
+    "themeLight": "Light",
+    "themeDark": "Dark"
   },
   "layout": {
     "footerLeft": "Auto-Flashcards MVP",
@@ -351,7 +354,7 @@
     "title": "Create account",
     "subtitle": "Sign up to start creating and reviewing flashcards.",
     "fullNameLabel": "Full name",
-    "fullNamePlaceholder": "e.g., Majid Albadwi",
+    "fullNamePlaceholder": "e.g., Majid ",
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
     "passwordLabel": "Password",
