@@ -5,8 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
 /* ---------------------------------- UI Utils --------------------------------- */
 function cx(...classes) {
@@ -120,7 +119,7 @@ function TopNav() {
             </div>
             <div className="leading-tight">
               <div className="text-sm font-semibold">Auto-Flashcards</div>
-              <div className="text-xs text-slate-400">Review • UC-3 • SM-2</div>
+              <div className="text-xs text-slate-400">Review - UC-3 - SM-2</div>
             </div>
           </div>
 
@@ -187,6 +186,7 @@ export default function ReviewPage() {
   const [currentCard, setCurrentCard] = useState(null);
   const [loadingCard, setLoadingCard] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [sessionCount, setSessionCount] = useState(0);
 
   const [error, setError] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
@@ -203,7 +203,7 @@ export default function ReviewPage() {
       const res = await apiFetchAuthed(router, "/decks/", { method: "GET" });
       if (!res.ok) {
         const t = await res.text().catch(() => "");
-        throw new Error(`Failed to load decks: ${res.status} ${t ? `– ${t}` : ""}`);
+        throw new Error(`Failed to load decks: ${res.status}${t ? ` "${t}"` : ""}`);
       }
 
       const list = (await res.json()) || [];
@@ -238,13 +238,13 @@ export default function ReviewPage() {
 
       if (!res.ok) {
         const text = await res.text().catch(() => "");
-        throw new Error(`Error loading next card: ${res.status} ${text ? `– ${text}` : ""}`);
+        throw new Error(`Error loading next card: ${res.status}${text ? ` "${text}"` : ""}`);
       }
 
       const json = await res.json();
       if (!json?.card) {
         setCurrentCard(null);
-        setInfoMessage("No due cards today for this deck 🎉");
+        setInfoMessage("No due cards today for this deck.");
       } else {
         setCurrentCard(json.card);
       }
@@ -276,18 +276,19 @@ export default function ReviewPage() {
 
         if (!res.ok) {
           const text = await res.text().catch(() => "");
-          throw new Error(`Error submitting answer: ${res.status} ${text ? `– ${text}` : ""}`);
+          throw new Error(`Error submitting answer: ${res.status}${text ? ` "${text}"` : ""}`);
         }
 
         const data = await res.json();
         if (!data?.next_card) {
           setCurrentCard(null);
-          setInfoMessage("Session finished for this deck 🎉");
+          setInfoMessage("Session finished for this deck.");
           setShowAnswer(false);
         } else {
           setCurrentCard(data.next_card);
           setShowAnswer(false);
         }
+        setSessionCount((n) => n + 1);
       } catch (err) {
         setError(err?.message || "Error while submitting answer.");
       } finally {
@@ -302,11 +303,12 @@ export default function ReviewPage() {
   }, [loadDecks]);
 
   useEffect(() => {
-    // When deck changes → reset and load
+    // When deck changes reset and load
     if (!selectedDeckId) return;
     setCurrentCard(null);
     setInfoMessage("");
     setError("");
+    setSessionCount(0);
     void loadNextCard();
   }, [selectedDeckId, loadNextCard]);
 
@@ -316,6 +318,11 @@ export default function ReviewPage() {
       title: d.title,
     }));
   }, [decks]);
+
+  const activeDeck = useMemo(
+    () => decks.find((d) => String(d.id) === String(selectedDeckId)),
+    [decks, selectedDeckId]
+  );
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50">
@@ -336,20 +343,15 @@ export default function ReviewPage() {
                 Review mode <span className="text-slate-400 text-base">(UC-3)</span>
               </h1>
               <p className="text-sm text-slate-300">
-                Select a deck, flip the card, then grade your recall (SM-2).
+                Select a deck, flip the card, then grade your recall (SM-2). Keep runs short and focused.
               </p>
               <div className="mt-2 text-xs text-slate-500">
-                API: <span className="text-slate-300">{API_BASE}</span>
+                API: <span className="text-slate-300">{API_BASE}</span> - <span className="text-emerald-300">Auth required</span>
               </div>
             </div>
 
             <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                loading={loadingDecks}
-                onClick={() => loadDecks()}
-                className="w-auto"
-              >
+              <Button variant="secondary" loading={loadingDecks} onClick={() => loadDecks()} className="w-auto">
                 Reload decks
               </Button>
               <Button
@@ -367,8 +369,16 @@ export default function ReviewPage() {
 
         {/* Alerts */}
         <div className="space-y-3">
-          {error ? <Alert type="error" title="Error">{error}</Alert> : null}
-          {infoMessage ? <Alert type="success" title="Info">{infoMessage}</Alert> : null}
+          {error ? (
+            <Alert type="error" title="Error">
+              {error}
+            </Alert>
+          ) : null}
+          {infoMessage ? (
+            <Alert type="success" title="Info">
+              {infoMessage}
+            </Alert>
+          ) : null}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
@@ -450,7 +460,8 @@ export default function ReviewPage() {
                 <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
                   <div className="text-sm font-semibold">Tip</div>
                   <div className="mt-1 text-xs text-slate-400">
-                    Click <span className="text-slate-200">Show answer</span> قبل اختيار Grade لضمان تجربة مراجعة صحيحة.
+                    Click <span className="text-slate-200">Show answer</span>, then pick Again / Hard / Good / Easy.
+                    If unsure, lean on <span className="text-slate-200">Good</span> to keep momentum.
                   </div>
                 </div>
               </div>
@@ -460,7 +471,7 @@ export default function ReviewPage() {
           {/* Right: current card */}
           <CardShell
             title="Current card"
-            subtitle="Question first — then reveal the answer — then grade your recall."
+            subtitle="Question first, then reveal the answer, then grade your recall."
             right={
               <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
                 GET/POST <span className="text-slate-200">/review</span>
@@ -484,15 +495,13 @@ export default function ReviewPage() {
               <div className="space-y-4">
                 <div className="rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5">
                   <div className="flex items-center justify-between text-[11px] text-slate-400">
-                    <span>Deck: {selectedDeckId}</span>
+                    <span>Deck: {activeDeck?.title || selectedDeckId}</span>
                     <span>Card: {currentCard.id}</span>
                   </div>
 
                   <div className="mt-4">
                     <div className="text-xs font-semibold text-slate-400">Question</div>
-                    <div className="mt-1 text-base font-semibold text-slate-50">
-                      {currentCard.question}
-                    </div>
+                    <div className="mt-1 text-base font-semibold text-slate-50">{currentCard.question}</div>
                   </div>
 
                   <div className="mt-4">
@@ -509,55 +518,50 @@ export default function ReviewPage() {
                         {currentCard.answer}
                       </div>
                     ) : (
-                      <div className="mt-3 text-xs text-slate-500">
-                        Reveal the answer when you’re ready.
-                      </div>
+                      <div className="mt-3 text-xs text-slate-500">Reveal the answer when you're ready.</div>
                     )}
                   </div>
                 </div>
 
                 <div className="rounded-3xl border border-slate-800/70 bg-slate-950/40 p-4">
-                  <div className="text-xs font-semibold text-slate-300 mb-3">
-                    Grade your recall
-                  </div>
+                  <div className="text-xs font-semibold text-slate-300 mb-3">Grade your recall</div>
 
                   <div className="grid gap-2 sm:grid-cols-2">
-                    <Button
-                      variant="danger"
-                      disabled={submitting}
-                      loading={submitting}
-                      onClick={() => handleAnswer(0)}
-                    >
+                    <Button variant="danger" disabled={submitting} loading={submitting} onClick={() => handleAnswer(0)}>
                       Again (0)
                     </Button>
 
-                    <Button
-                      variant="warn"
-                      disabled={submitting}
-                      onClick={() => handleAnswer(3)}
-                    >
+                    <Button variant="warn" disabled={submitting} onClick={() => handleAnswer(3)}>
                       Hard (3)
                     </Button>
 
-                    <Button
-                      variant="primary"
-                      disabled={submitting}
-                      onClick={() => handleAnswer(4)}
-                    >
+                    <Button variant="primary" disabled={submitting} onClick={() => handleAnswer(4)}>
                       Good (4)
                     </Button>
 
-                    <Button
-                      variant="success"
-                      disabled={submitting}
-                      onClick={() => handleAnswer(5)}
-                    >
+                    <Button variant="success" disabled={submitting} onClick={() => handleAnswer(5)}>
                       Easy (5)
                     </Button>
                   </div>
 
                   <div className="mt-3 text-[11px] text-slate-500">
-                    If you’re not sure, prefer <span className="text-slate-300">Good</span>.
+                    If you're not sure, prefer <span className="text-slate-300">Good</span>.
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-slate-800/70 bg-slate-950/40 p-4">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
+                    <span>Session</span>
+                    <span className="text-slate-400">{sessionCount} cards graded</span>
+                  </div>
+                  <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-900">
+                    <div
+                      className="h-full rounded-full bg-sky-500 transition-all duration-300"
+                      style={{ width: `${Math.min(sessionCount * 12, 100)}%` }}
+                    />
+                  </div>
+                  <div className="mt-2 text-[11px] text-slate-500">
+                    Progress resets when you switch decks. Keep a streak going.
                   </div>
                 </div>
               </div>
@@ -566,7 +570,7 @@ export default function ReviewPage() {
         </div>
 
         <footer className="pb-4 text-center text-xs text-slate-600">
-          Review UI • consistent Tailwind components • App Router navigation
+          Review UI - consistent Tailwind components - App Router navigation
         </footer>
       </div>
     </main>
