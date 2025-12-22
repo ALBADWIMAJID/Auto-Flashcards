@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "./lib/supabaseClient";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
 /* ---------------------------------- Utils --------------------------------- */
 function cx(...classes) {
@@ -15,7 +14,7 @@ function cx(...classes) {
 function truncateMiddle(str, left = 10, right = 10) {
   if (!str) return "";
   if (str.length <= left + right + 3) return str;
-  return `${str.slice(0, left)}…${str.slice(-right)}`;
+  return `${str.slice(0, left)}...${str.slice(-right)}`;
 }
 
 /* ------------------------------- Auth + Fetch ------------------------------- */
@@ -38,59 +37,84 @@ async function fetchWithAuth(url, options = {}) {
 }
 
 /* --------------------------------- UI Bits -------------------------------- */
-function TopNav({ isAuthed }) {
-  const items = [
-    { href: "/", label: "Home" },
-    { href: "/review", label: "Review" },
-    { href: "/stats", label: "Stats" },
-    { href: "/profile", label: "Profile" },
-  ];
+function Badge({ tone = "default", children }) {
+  const styles =
+    tone === "success"
+      ? "border-emerald-500/30 bg-emerald-950/40 text-emerald-200"
+      : tone === "info"
+      ? "border-sky-500/30 bg-sky-950/40 text-sky-200"
+      : tone === "warn"
+      ? "border-amber-500/30 bg-amber-950/40 text-amber-200"
+      : "border-slate-700 bg-slate-900/60 text-slate-200";
 
   return (
-    <div className="sticky top-0 z-40 border-b border-slate-800/60 bg-slate-950/70 backdrop-blur">
-      <div className="mx-auto max-w-6xl px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-xl border border-slate-800 bg-slate-900/60">
-              <span className="text-sm font-bold tracking-tight">AF</span>
-            </div>
-            <div className="leading-tight">
-              <div className="text-sm font-semibold">Auto-Flashcards</div>
-              <div className="text-xs text-slate-400">MVP • Next.js + FastAPI + Supabase</div>
-            </div>
-          </div>
+    <span
+      className={cx(
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide",
+        styles
+      )}
+    >
+      {children}
+    </span>
+  );
+}
 
-          <div className="hidden md:flex items-center gap-1 rounded-2xl border border-slate-800 bg-slate-900/30 p-1">
-            {items.map((it) => (
-              <Link
-                key={it.href}
-                href={it.href}
-                className={cx(
-                  "rounded-xl px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-slate-50 hover:bg-slate-800/60 transition",
-                  it.href === "/" && "bg-slate-800/60 text-slate-50"
-                )}
-              >
-                {it.label}
-              </Link>
-            ))}
-          </div>
+function Button({ variant = "primary", loading, className, children, ...props }) {
+  const styles =
+    variant === "primary"
+      ? "bg-sky-600 hover:bg-sky-500 text-white"
+      : variant === "secondary"
+      ? "bg-slate-900/60 hover:bg-slate-800/70 text-slate-100 border border-slate-800"
+      : variant === "ghost"
+      ? "bg-transparent hover:bg-slate-900/60 text-slate-200 border border-slate-800/70"
+      : "bg-emerald-600 hover:bg-emerald-500 text-white";
 
-          <div className="flex items-center gap-2">
-            <span
-              className={cx(
-                "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs",
-                isAuthed
-                  ? "border-emerald-500/30 bg-emerald-950/30 text-emerald-200"
-                  : "border-rose-500/30 bg-rose-950/30 text-rose-200"
-              )}
-            >
-              <span className={cx("h-2 w-2 rounded-full", isAuthed ? "bg-emerald-400" : "bg-rose-400")} />
-              {isAuthed ? "Signed in" : "Signed out"}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
+  return (
+    <button
+      {...props}
+      disabled={props.disabled || loading}
+      className={cx(
+        "inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold",
+        "transition disabled:opacity-70 disabled:cursor-not-allowed",
+        styles,
+        className
+      )}
+    >
+      {loading ? <Spinner /> : null}
+      {children}
+    </button>
+  );
+}
+
+function ButtonLink({ href, variant = "primary", className, children }) {
+  const styles =
+    variant === "primary"
+      ? "bg-sky-600 hover:bg-sky-500 text-white"
+      : variant === "secondary"
+      ? "bg-slate-900/60 hover:bg-slate-800/70 text-slate-100 border border-slate-800"
+      : "bg-transparent hover:bg-slate-900/60 text-slate-200 border border-slate-800/70";
+
+  return (
+    <Link
+      href={href}
+      className={cx(
+        "inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold",
+        "transition",
+        styles,
+        className
+      )}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function Spinner() {
+  return (
+    <span
+      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-200/20 border-t-slate-200/80"
+      aria-hidden="true"
+    />
   );
 }
 
@@ -106,6 +130,39 @@ function CardShell({ title, subtitle, right, children }) {
       </div>
       <div className="p-5">{children}</div>
     </section>
+  );
+}
+
+function FeatureCard({ title, description }) {
+  return (
+    <div className="rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5">
+      <div className="text-sm font-semibold">{title}</div>
+      <div className="mt-2 text-xs text-slate-400">{description}</div>
+    </div>
+  );
+}
+
+function StepCard({ step, title, description, href, cta }) {
+  return (
+    <div className="rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5">
+      <div className="flex items-start gap-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-700 bg-slate-900/60 text-xs font-semibold">
+          {step}
+        </div>
+        <div>
+          <div className="text-sm font-semibold">{title}</div>
+          <div className="mt-1 text-xs text-slate-400">{description}</div>
+        </div>
+      </div>
+      {href ? (
+        <Link
+          href={href}
+          className="mt-4 inline-flex text-xs font-semibold text-sky-300 hover:text-sky-200"
+        >
+          {cta}
+        </Link>
+      ) : null}
+    </div>
   );
 }
 
@@ -149,40 +206,6 @@ function Textarea(props) {
   );
 }
 
-function Button({ variant = "primary", loading, className, ...props }) {
-  const styles =
-    variant === "primary"
-      ? "bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800"
-      : variant === "success"
-      ? "bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800"
-      : "bg-slate-800 hover:bg-slate-700 disabled:bg-slate-800";
-
-  return (
-    <button
-      {...props}
-      disabled={props.disabled || loading}
-      className={cx(
-        "inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold",
-        "transition disabled:opacity-70 disabled:cursor-not-allowed",
-        styles,
-        className
-      )}
-    >
-      {loading ? <Spinner /> : null}
-      {props.children}
-    </button>
-  );
-}
-
-function Spinner() {
-  return (
-    <span
-      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-200/20 border-t-slate-200/80"
-      aria-hidden="true"
-    />
-  );
-}
-
 function Toast({ toast, onClose }) {
   useEffect(() => {
     if (!toast) return;
@@ -211,7 +234,7 @@ function Toast({ toast, onClose }) {
             onClick={onClose}
             className="rounded-xl px-2 py-1 text-xs opacity-80 hover:opacity-100 hover:bg-white/5"
           >
-            ✕
+            Close
           </button>
         </div>
       </div>
@@ -289,7 +312,7 @@ export default function HomePage() {
     let mounted = true;
 
     async function boot() {
-      const { data } = await supabase.auth.getUser(); // authentic user fetch
+      const { data } = await supabase.auth.getUser();
       if (!mounted) return;
 
       setUser(data?.user || null);
@@ -374,6 +397,7 @@ export default function HomePage() {
     }
 
     const maxCardsNumber = Math.min(20, Math.max(1, Number(maxCards) || 5));
+    setMaxCards(maxCardsNumber);
 
     setLoadingAI(true);
     try {
@@ -413,56 +437,180 @@ export default function HomePage() {
   }, [user]);
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50">
-      <TopNav isAuthed={isAuthed} />
+    <div className="space-y-10">
+      {/* Hero */}
+      <section className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/40 p-6 md:p-10">
+        <div aria-hidden="true" className="absolute inset-0">
+          <div className="absolute -top-24 right-8 h-56 w-56 rounded-full bg-sky-500/10 blur-3xl" />
+          <div className="absolute -bottom-20 left-8 h-56 w-56 rounded-full bg-emerald-500/10 blur-3xl" />
+        </div>
 
-      {/* Background glow */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-sky-500/10 blur-3xl" />
-        <div className="absolute -bottom-24 left-1/3 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto max-w-6xl px-4 py-8 md:py-10 space-y-6">
-        {/* Header */}
-        <div className="rounded-3xl border border-slate-800/70 bg-slate-900/30 p-6 md:p-8">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="space-y-1">
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-                Build decks faster. Review smarter.
-              </h1>
-              <p className="text-sm text-slate-300">
-                Generate flashcards with AI and manage decks via your API.
-              </p>
-              <div className="mt-2 text-xs text-slate-500">
-                API: <span className="text-slate-300">{API_BASE_URL}</span>
-              </div>
+        <div className="relative grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-5">
+            <div className="flex flex-wrap gap-2">
+              <Badge tone="info">AI generator</Badge>
+              <Badge tone="success">SM-2 review</Badge>
+              <Badge>Fast setup</Badge>
             </div>
 
-            <div className="flex flex-col items-start gap-2 md:items-end">
-              <div className="text-xs text-slate-400">
-                Status:{" "}
-                <span className={cx("font-semibold", isAuthed ? "text-emerald-300" : "text-rose-300")}>
-                  {isAuthed ? "Authenticated" : "Not authenticated"}
-                </span>
-              </div>
+            <div className="space-y-3">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                Turn notes into review-ready flashcards.
+              </h1>
+              <p className="text-sm md:text-base text-slate-300">
+                Create decks in minutes, generate cards with AI, and review with spaced repetition to
+                retain more with less time.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <ButtonLink href="/register" variant="primary">
+                Get started free
+              </ButtonLink>
+              <ButtonLink href="#quickstart" variant="secondary">
+                Try it now
+              </ButtonLink>
               {isAuthed ? (
-                <div className="text-xs text-slate-400">
-                  User: <span className="text-slate-200">{userLabel}</span>
-                </div>
+                <ButtonLink href="/review" variant="ghost">
+                  Continue review
+                </ButtonLink>
               ) : (
-                <div className="text-xs text-slate-500">
-                  Tip: go to <Link className="text-sky-300 hover:underline" href="/profile">Profile</Link> to sign in.
-                </div>
+                <ButtonLink href="/login" variant="ghost">
+                  Sign in
+                </ButtonLink>
               )}
             </div>
+
+            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+              <span>
+                API: <span className="text-slate-200">{API_BASE_URL}</span>
+              </span>
+              <span className="h-1 w-1 rounded-full bg-slate-600" />
+              <span>{isAuthed ? `Signed in as ${userLabel}` : "Not signed in"}</span>
+            </div>
           </div>
+
+          <div className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-5 md:p-6">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold">Quick start</div>
+              <Badge tone="warn">3 min setup</Badge>
+            </div>
+            <div className="mt-4 space-y-3">
+              <div className="flex items-start gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/40 p-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900/60 text-xs font-semibold">
+                  1
+                </span>
+                <div>
+                  <div className="text-sm font-semibold">Create an account</div>
+                  <div className="text-xs text-slate-400">Unlock decks, stats, and reviews.</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/40 p-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900/60 text-xs font-semibold">
+                  2
+                </span>
+                <div>
+                  <div className="text-sm font-semibold">Generate cards</div>
+                  <div className="text-xs text-slate-400">Paste notes and pick 1-20 cards.</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/40 p-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900/60 text-xs font-semibold">
+                  3
+                </span>
+                <div>
+                  <div className="text-sm font-semibold">Review daily</div>
+                  <div className="text-xs text-slate-400">Grade recall and build streaks.</div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              <ButtonLink href="/register" variant="primary">
+                Create account
+              </ButtonLink>
+              <ButtonLink href="#quickstart" variant="secondary">
+                Open quick start
+              </ButtonLink>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section id="how-it-works" className="space-y-5">
+        <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-1">
+            <h2 className="text-xl md:text-2xl font-semibold tracking-tight">How it works</h2>
+            <p className="text-sm text-slate-400">
+              A simple flow to turn material into long-term memory.
+            </p>
+          </div>
+          <ButtonLink href="/register" variant="secondary">
+            Start now
+          </ButtonLink>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StepCard
+            step="01"
+            title="Sign up"
+            description="Create an account to unlock decks and progress."
+            href="/register"
+            cta="Create account"
+          />
+          <StepCard
+            step="02"
+            title="Add notes"
+            description="Paste text or upload files from your study material."
+            href="#quickstart"
+            cta="Try generator"
+          />
+          <StepCard
+            step="03"
+            title="Build decks"
+            description="Organize flashcards into decks by topic or class."
+            href="/profile"
+            cta="Manage decks"
+          />
+          <StepCard
+            step="04"
+            title="Review"
+            description="Grade your recall and follow SM-2 scheduling."
+            href="/review"
+            cta="Start review"
+          />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <FeatureCard
+            title="AI card generation"
+            description="Create Q/A cards from raw notes in minutes."
+          />
+          <FeatureCard
+            title="Spaced repetition"
+            description="Review with proven SM-2 scheduling for retention."
+          />
+          <FeatureCard
+            title="Progress tracking"
+            description="See what is due, learned, and reviewed over time."
+          />
+        </div>
+      </section>
+
+      {/* Quick start */}
+      <section id="quickstart" className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-xl md:text-2xl font-semibold tracking-tight">Quick start lab</h2>
+          <p className="text-sm text-slate-400">
+            Generate flashcards and create your first deck in the same place.
+          </p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* AI */}
           <CardShell
-            title="AI Card Generator"
-            subtitle="Paste a study text, choose number of cards, and generate Q/A."
+            title="AI card generator"
+            subtitle="Paste a study text, choose the number of cards, and generate Q/A."
             right={
               <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
                 POST <span className="text-slate-200">/ai/generate</span>
@@ -470,18 +618,18 @@ export default function HomePage() {
             }
           >
             <div className="space-y-4">
-              <Field label="Study text" hint="Try 2–5 paragraphs">
+              <Field label="Study text" hint="Try 2-5 paragraphs">
                 <Textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   rows={6}
-                  placeholder="Paste your lecture notes here…"
+                  placeholder="Paste your lecture notes here."
                 />
               </Field>
 
               <div className="flex flex-col gap-3 md:flex-row md:items-end">
                 <div className="w-full md:w-40">
-                  <Field label="Max cards" hint="1–20">
+                  <Field label="Max cards" hint="1-20">
                     <Input
                       type="number"
                       min={1}
@@ -492,12 +640,8 @@ export default function HomePage() {
                   </Field>
                 </div>
 
-                <Button
-                  onClick={handleGenerate}
-                  loading={loadingAI}
-                  className="w-full md:w-auto"
-                >
-                  {loadingAI ? "Generating…" : "Generate"}
+                <Button onClick={handleGenerate} loading={loadingAI} className="w-full md:w-auto">
+                  {loadingAI ? "Generating..." : "Generate cards"}
                 </Button>
 
                 <Button
@@ -543,9 +687,7 @@ export default function HomePage() {
                           Q/A
                         </span>
                       </div>
-                      <div className="mt-2 text-sm font-semibold text-slate-50">
-                        {c.question}
-                      </div>
+                      <div className="mt-2 text-sm font-semibold text-slate-50">{c.question}</div>
                       <div className="mt-2 text-sm text-slate-300">{c.answer}</div>
                     </div>
                   ))}
@@ -554,7 +696,7 @@ export default function HomePage() {
                 <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
                   <div className="text-sm font-semibold">No results yet</div>
                   <div className="mt-1 text-xs text-slate-400">
-                    Paste text and click <span className="text-slate-200">Generate</span>.
+                    Paste text and click <span className="text-slate-200">Generate cards</span>.
                   </div>
                 </div>
               )}
@@ -563,8 +705,8 @@ export default function HomePage() {
 
           {/* Decks */}
           <CardShell
-            title="Decks"
-            subtitle="Create a deck and view your list (requires Bearer token via Supabase)."
+            title="Your decks"
+            subtitle="Create a deck and view your list. Save cards after you sign in."
             right={
               <div className="flex items-center gap-2">
                 <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
@@ -572,7 +714,11 @@ export default function HomePage() {
                 </span>
                 <Button
                   variant="secondary"
-                  onClick={() => (isAuthed ? loadDecks() : pushToast("warning", "Sign in required", "Please sign in first."))}
+                  onClick={() =>
+                    isAuthed
+                      ? loadDecks()
+                      : pushToast("warning", "Sign in required", "Please sign in first.")
+                  }
                   loading={loadingDecks}
                 >
                   Reload
@@ -582,9 +728,17 @@ export default function HomePage() {
           >
             {!isAuthed ? (
               <div className="rounded-2xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-sm text-amber-100">
-                <div className="font-semibold">Login required</div>
+                <div className="font-semibold">Sign in to save decks</div>
                 <div className="mt-1 text-xs opacity-90">
-                  Go to <Link className="text-amber-200 hover:underline" href="/profile">Profile</Link> to sign in, then you can read/create decks.
+                  Go to{" "}
+                  <Link className="text-amber-200 hover:underline" href="/login">
+                    Login
+                  </Link>{" "}
+                  or{" "}
+                  <Link className="text-amber-200 hover:underline" href="/register">
+                    Create account
+                  </Link>
+                  .
                 </div>
               </div>
             ) : null}
@@ -600,16 +754,16 @@ export default function HomePage() {
                   <Input
                     value={deckTitle}
                     onChange={(e) => setDeckTitle(e.target.value)}
-                    placeholder="e.g., Data Structures — Week 3"
+                    placeholder="e.g., Data Structures - Week 3"
                   />
                 </Field>
 
-                <Field label="Description" hint="optional">
+                <Field label="Description" hint="Optional">
                   <Textarea
                     value={deckDescription}
                     onChange={(e) => setDeckDescription(e.target.value)}
                     rows={3}
-                    placeholder="Short description…"
+                    placeholder="Short description."
                   />
                 </Field>
 
@@ -626,14 +780,16 @@ export default function HomePage() {
                   disabled={!isAuthed}
                   className="w-full"
                 >
-                  {creatingDeck ? "Creating…" : "Create deck"}
+                  {creatingDeck ? "Creating..." : "Create deck"}
                 </Button>
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold">Your decks</h3>
-                  <span className="text-[11px] text-slate-500">{isAuthed ? `${decks.length} total` : ""}</span>
+                  <h3 className="text-sm font-semibold">Deck list</h3>
+                  <span className="text-[11px] text-slate-500">
+                    {isAuthed ? `${decks.length} total` : ""}
+                  </span>
                 </div>
 
                 {loadingDecks ? (
@@ -653,10 +809,10 @@ export default function HomePage() {
                             </div>
                           </div>
                           <Link
-                            href={`/decks`}
+                            href="/profile"
                             className="rounded-xl border border-slate-800 bg-slate-900/30 px-2.5 py-1 text-[11px] text-slate-300 opacity-0 group-hover:opacity-100 transition hover:bg-slate-800/60"
                           >
-                            Open
+                            Manage
                           </Link>
                         </div>
                       </div>
@@ -665,20 +821,44 @@ export default function HomePage() {
                 ) : (
                   <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
                     <div className="text-sm font-semibold">No decks yet</div>
-                    <div className="mt-1 text-xs text-slate-400">Create your first deck on the left.</div>
+                    <div className="mt-1 text-xs text-slate-400">
+                      Create your first deck on the left.
+                    </div>
                   </div>
                 )}
               </div>
             </div>
           </CardShell>
         </div>
+      </section>
 
-        <footer className="pb-4 text-center text-xs text-slate-500">
-          Built for the Auto-Flashcards project • UI with Tailwind utility classes.
-        </footer>
-      </div>
+      {/* CTA */}
+      <section className="rounded-3xl border border-slate-800/70 bg-slate-900/40 p-6 md:p-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1">
+            <h2 className="text-xl md:text-2xl font-semibold tracking-tight">
+              Ready to build your first deck?
+            </h2>
+            <p className="text-sm text-slate-400">
+              Start free, create your first deck, and review today.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <ButtonLink href="/register" variant="primary">
+              Create account
+            </ButtonLink>
+            <ButtonLink href="/review" variant="secondary">
+              Go to review
+            </ButtonLink>
+          </div>
+        </div>
+      </section>
+
+      <footer className="pb-4 text-center text-xs text-slate-500">
+        Auto-Flashcards - AI flashcards and spaced repetition workflow.
+      </footer>
 
       <Toast toast={toast} onClose={() => setToast(null)} />
-    </main>
+    </div>
   );
 }

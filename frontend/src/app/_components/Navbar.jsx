@@ -9,10 +9,10 @@ function cx(...classes) {
 }
 
 const NAV_ITEMS = [
-  { href: "/", label: "Главная" },
-  { href: "/review", label: "Повторение" },
-  { href: "/stats", label: "Статистика" },
-  { href: "/profile", label: "Профиль" },
+  { href: "/", label: "Home" },
+  { href: "/review", label: "Review" },
+  { href: "/stats", label: "Stats" },
+  { href: "/profile", label: "Profile" },
 ];
 
 function NavItem({ href, label, active, onClick }) {
@@ -82,21 +82,14 @@ export default function Navbar() {
               <div className="text-sm md:text-base font-semibold text-slate-100 group-hover:text-sky-200 transition-colors">
                 Auto-Flashcards
               </div>
-              <div className="text-[10px] md:text-xs text-slate-400">
-                CodeX Team Project
-              </div>
+              <div className="text-[10px] md:text-xs text-slate-400">CodeX Team Project</div>
             </div>
           </Link>
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-2">
             {NAV_ITEMS.map((it) => (
-              <NavItem
-                key={it.href}
-                href={it.href}
-                label={it.label}
-                active={isActive(it.href)}
-              />
+              <NavItem key={it.href} href={it.href} label={it.label} active={isActive(it.href)} />
             ))}
           </nav>
 
@@ -115,7 +108,6 @@ export default function Navbar() {
               aria-controls="mobile-menu"
               onClick={() => setMobileOpen((v) => !v)}
             >
-              {/* Hamburger / X */}
               <span className="sr-only">Menu</span>
               <svg
                 width="18"
@@ -145,9 +137,9 @@ export default function Navbar() {
 
             <span className="hidden sm:inline-block h-6 w-px bg-slate-800 mx-1" />
 
-            <PillLink href="/login">Вход</PillLink>
+            <PillLink href="/login">Login</PillLink>
             <PillLink href="/register" variant="primary">
-              Регистрация
+              Get started
             </PillLink>
           </div>
         </div>
@@ -175,10 +167,10 @@ export default function Navbar() {
 
             <div className="mt-3 flex items-center gap-2">
               <PillLink href="/login" onClick={() => setMobileOpen(false)}>
-                Вход
+                Login
               </PillLink>
               <PillLink href="/register" variant="primary" onClick={() => setMobileOpen(false)}>
-                Регистрация
+                Get started
               </PillLink>
             </div>
           </div>

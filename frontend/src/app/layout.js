@@ -13,16 +13,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Auto-Flashcards — MVP прототип",
-  description: "Учебный прототип системы авто-генерации флеш-карточек.",
+  title: "Auto-Flashcards MVP",
+  description:
+    "Generate flashcards with AI, review with spaced repetition, and manage decks with Supabase auth.",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ru" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased text-slate-50`}
-      >
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased text-slate-50`}>
         {/* Background */}
         <div className="min-h-screen flex flex-col bg-slate-950">
           <div className="pointer-events-none fixed inset-0 -z-10">
@@ -40,10 +39,8 @@ export default function RootLayout({ children }) {
           {/* Footer */}
           <footer className="border-t border-slate-800/80 bg-slate-950/60 backdrop-blur">
             <div className="max-w-6xl mx-auto px-4 py-4 text-[10px] md:text-xs text-slate-400 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-              <span>Auto-Flashcards — учебный MVP прототип</span>
-              <span className="text-slate-500">
-                Next.js · FastAPI · Supabase · OpenAI
-              </span>
+              <span>Auto-Flashcards MVP</span>
+              <span className="text-slate-500">Next.js + FastAPI + Supabase + OpenAI</span>
             </div>
           </footer>
         </div>
