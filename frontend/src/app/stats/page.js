@@ -100,56 +100,6 @@ function SkeletonTile() {
   );
 }
 
-function TopNav() {
-  const items = [
-    { href: "/", label: "Home" },
-    { href: "/decks", label: "Decks" },
-    { href: "/review", label: "Review" },
-    { href: "/stats", label: "Stats" },
-    { href: "/profile", label: "Profile" },
-  ];
-
-  return (
-    <div className="sticky top-0 z-40 border-b border-slate-800/60 bg-slate-950/70 backdrop-blur">
-      <div className="mx-auto max-w-6xl px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-xl border border-slate-800 bg-slate-900/60">
-              <span className="text-sm font-bold tracking-tight">AF</span>
-            </div>
-            <div className="leading-tight">
-              <div className="text-sm font-semibold">Auto-Flashcards</div>
-              <div className="text-xs text-slate-400">Stats · UC-4</div>
-            </div>
-          </div>
-
-          <div className="hidden md:flex items-center gap-1 rounded-2xl border border-slate-800 bg-slate-900/30 p-1">
-            {items.map((it) => (
-              <Link
-                key={it.href}
-                href={it.href}
-                className={cx(
-                  "rounded-xl px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-slate-50 hover:bg-slate-800/60 transition",
-                  it.href === "/stats" && "bg-slate-800/60 text-slate-50"
-                )}
-              >
-                {it.label}
-              </Link>
-            ))}
-          </div>
-
-          <Link
-            href="/profile"
-            className="rounded-2xl border border-slate-800 bg-slate-900/30 px-3 py-2 text-xs text-slate-200 hover:bg-slate-800/60 transition"
-          >
-            Back to profile
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ------------------------------ API helper ------------------------------ */
 async function apiFetchAuthed(router, path, options = {}) {
   const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
@@ -225,138 +175,126 @@ export default function StatsPage() {
   }, [stats]);
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50">
-      <TopNav />
-
-      {/* Background glow */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-sky-500/10 blur-3xl" />
-        <div className="absolute -bottom-24 left-1/3 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto max-w-6xl px-4 py-8 md:py-10 space-y-6">
-        {/* Header */}
-        <div className="rounded-3xl border border-slate-800/70 bg-slate-900/30 p-6 md:p-8">
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div className="space-y-1">
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-                Learning statistics <span className="text-slate-400 text-base">(UC-4)</span>
-              </h1>
-              <p className="text-sm text-slate-300">
-                Overview of your decks, cards, due items, and review momentum.
-              </p>
-              <div className="mt-2 text-xs text-slate-500">
-                Endpoint: <span className="text-slate-300">GET {API_BASE}/stats/overview</span> ·{" "}
-                <span className="text-emerald-300">Protected</span>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={loadStats} loading={loading} className="w-auto">
-                Refresh
-              </Button>
-              <Link
-                href="/review"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-2.5 text-sm font-semibold hover:bg-slate-800/70 transition"
-              >
-                Go to Review
-              </Link>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="rounded-3xl border border-slate-800/70 bg-slate-900/30 p-6 md:p-8">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+              Learning statistics <span className="text-slate-400 text-base">(UC-4)</span>
+            </h1>
+            <p className="text-sm text-slate-300">
+              Overview of your decks, cards, due items, and review momentum.
+            </p>
+            <div className="mt-2 text-xs text-slate-500">
+              Endpoint: <span className="text-slate-300">GET {API_BASE}/stats/overview</span> -{" "}
+              <span className="text-emerald-300">Protected</span>
             </div>
           </div>
+
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={loadStats} loading={loading} className="w-auto">
+              Refresh
+            </Button>
+            <Link
+              href="/review"
+              className="inline-flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-2.5 text-sm font-semibold hover:bg-slate-800/70 transition"
+            >
+              Go to Review
+            </Link>
+          </div>
         </div>
-
-        {/* Alerts */}
-        {error ? (
-          <Alert type="error" title="Error">
-            {error}
-          </Alert>
-        ) : null}
-
-        <CardShell
-          title="Overview"
-          subtitle="Data is scoped to your account."
-          right={
-            <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
-              Protected · Bearer token
-            </span>
-          }
-        >
-          {loading ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              <SkeletonTile />
-              <SkeletonTile />
-              <SkeletonTile />
-              <SkeletonTile />
-              <div className="md:col-span-2">
-                <SkeletonTile />
-              </div>
-            </div>
-          ) : !stats ? (
-            <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
-              <div className="text-sm font-semibold">No data</div>
-              <div className="mt-1 text-xs text-slate-400">
-                Try refreshing, or complete at least one review session.
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <StatTile label="Total decks" value={stats.total_decks} hint="Decks linked to your account." />
-                <StatTile label="Total cards" value={stats.total_cards} hint="All cards across decks." />
-
-                <StatTile
-                  label="Due today"
-                  value={stats.due_today}
-                  hint={dueHint}
-                  tone={Number(stats.due_today || 0) > 25 ? "warn" : "accent"}
-                />
-
-                <StatTile
-                  label="Learned cards"
-                  value={stats.learned_cards}
-                  hint="Heuristic: repetitions ≥ 3"
-                  tone="success"
-                />
-
-                <div className="md:col-span-2 rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <div className="text-xs text-slate-400">Reviewed cards</div>
-                    <div className="mt-2 text-3xl font-bold tracking-tight text-slate-50">
-                      {stats.reviewed_cards ?? "..."}
-                    </div>
-                    <div className="mt-2 text-[11px] text-slate-500">Cards that received at least one grade.</div>
-                  </div>
-
-                  <div className="w-full md:w-[320px]">
-                    <div className="flex items-center justify-between text-[11px] text-slate-500">
-                      <span>Progress</span>
-                      <span className="text-slate-300">{completionHint?.text ?? ""}</span>
-                    </div>
-                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-900/60 border border-slate-800">
-                      <div
-                        className="h-full bg-emerald-500/70 transition-all duration-300"
-                        style={{ width: `${completionHint?.pct ?? 0}%` }}
-                      />
-                    </div>
-                    <div className="mt-2 text-[11px] text-slate-600">Tip: Keep daily reviews small & consistent.</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
-                <div className="text-sm font-semibold">Next step</div>
-                <div className="mt-1 text-xs text-slate-400">
-                  If "Due today" is 0, hop into Review to cement recent learning or add new cards from Profile.
-                </div>
-              </div>
-            </div>
-          )}
-        </CardShell>
-
-        <footer className="pb-4 text-center text-xs text-slate-600">
-          Stats UI · consistent Tailwind components · App Router navigation
-        </footer>
       </div>
-    </main>
+
+      {/* Alerts */}
+      {error ? (
+        <Alert type="error" title="Error">
+          {error}
+        </Alert>
+      ) : null}
+
+      <CardShell
+        title="Overview"
+        subtitle="Data is scoped to your account."
+        right={
+          <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
+            Protected - Bearer token
+          </span>
+        }
+      >
+        {loading ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            <SkeletonTile />
+            <SkeletonTile />
+            <SkeletonTile />
+            <SkeletonTile />
+            <div className="md:col-span-2">
+              <SkeletonTile />
+            </div>
+          </div>
+        ) : !stats ? (
+          <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
+            <div className="text-sm font-semibold">No data</div>
+            <div className="mt-1 text-xs text-slate-400">
+              Try refreshing, or complete at least one review session.
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <StatTile label="Total decks" value={stats.total_decks} hint="Decks linked to your account." />
+              <StatTile label="Total cards" value={stats.total_cards} hint="All cards across decks." />
+
+              <StatTile
+                label="Due today"
+                value={stats.due_today}
+                hint={dueHint}
+                tone={Number(stats.due_today || 0) > 25 ? "warn" : "accent"}
+              />
+
+              <StatTile
+                label="Learned cards"
+                value={stats.learned_cards}
+                hint="Heuristic: repetitions >= 3"
+                tone="success"
+              />
+
+              <div className="md:col-span-2 rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="text-xs text-slate-400">Reviewed cards</div>
+                  <div className="mt-2 text-3xl font-bold tracking-tight text-slate-50">
+                    {stats.reviewed_cards ?? "..."}
+                  </div>
+                  <div className="mt-2 text-[11px] text-slate-500">Cards that received at least one grade.</div>
+                </div>
+
+                <div className="w-full md:w-[320px]">
+                  <div className="flex items-center justify-between text-[11px] text-slate-500">
+                    <span>Progress</span>
+                    <span className="text-slate-300">{completionHint?.text ?? ""}</span>
+                  </div>
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-900/60 border border-slate-800">
+                    <div
+                      className="h-full bg-emerald-500/70 transition-all duration-300"
+                      style={{ width: `${completionHint?.pct ?? 0}%` }}
+                    />
+                  </div>
+                  <div className="mt-2 text-[11px] text-slate-600">
+                    Tip: Keep daily reviews small and consistent.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
+              <div className="text-sm font-semibold">Next step</div>
+              <div className="mt-1 text-xs text-slate-400">
+                If "Due today" is 0, hop into Review to cement recent learning or add new cards from Profile.
+              </div>
+            </div>
+          </div>
+        )}
+      </CardShell>
+    </div>
   );
 }
