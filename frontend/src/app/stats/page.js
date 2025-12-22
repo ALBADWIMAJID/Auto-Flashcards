@@ -5,8 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
 /* ------------------------------ UI helpers ------------------------------ */
 function cx(...classes) {
@@ -76,11 +75,20 @@ function CardShell({ title, subtitle, right, children }) {
   );
 }
 
-function StatTile({ label, value, hint }) {
+function StatTile({ label, value, hint, tone = "default" }) {
+  const toneText =
+    tone === "accent"
+      ? "text-sky-100"
+      : tone === "warn"
+      ? "text-amber-100"
+      : tone === "success"
+      ? "text-emerald-100"
+      : "text-slate-50";
+
   return (
     <div className="rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5">
       <div className="text-xs text-slate-400">{label}</div>
-      <div className="mt-2 text-3xl font-bold tracking-tight">{value ?? "—"}</div>
+      <div className={cx("mt-2 text-3xl font-bold tracking-tight", toneText)}>{value ?? "..."}</div>
       {hint ? <div className="mt-2 text-[11px] text-slate-500">{hint}</div> : null}
     </div>
   );
@@ -111,7 +119,7 @@ function TopNav() {
             </div>
             <div className="leading-tight">
               <div className="text-sm font-semibold">Auto-Flashcards</div>
-              <div className="text-xs text-slate-400">Stats • UC-4</div>
+              <div className="text-xs text-slate-400">Stats · UC-4</div>
             </div>
           </div>
 
@@ -182,7 +190,7 @@ export default function StatsPage() {
       const res = await apiFetchAuthed(router, "/stats/overview", { method: "GET" });
       if (!res.ok) {
         const t = await res.text().catch(() => "");
-        throw new Error(`Failed to load stats: ${res.status} ${t ? `– ${t}` : ""}`);
+        throw new Error(`Failed to load stats: ${res.status}${t ? ` "${t}"` : ""}`);
       }
       const data = await res.json();
       setStats(data);
@@ -199,12 +207,21 @@ export default function StatsPage() {
   }, [loadStats]);
 
   const completionHint = useMemo(() => {
-    if (!stats) return null;
+    if (!stats) return { pct: 0, text: "Start reviewing to build your stats." };
     const total = Number(stats.total_cards || 0);
     const learned = Number(stats.learned_cards || 0);
-    if (!total) return { pct: 0, text: "Start reviewing to build your stats." };
+    if (!total) return { pct: 0, text: "Add cards to get progress." };
     const pct = Math.max(0, Math.min(100, Math.round((learned / total) * 100)));
     return { pct, text: `${pct}% learned (approx.)` };
+  }, [stats]);
+
+  const dueHint = useMemo(() => {
+    if (!stats) return "No data yet.";
+    const due = Number(stats.due_today || 0);
+    if (due === 0) return "No due cards right now. Great time to add or generate new ones.";
+    if (due < 10) return "Light day: knock these out quickly.";
+    if (due < 30) return "Manageable load: schedule a short session.";
+    return "Busy queue: break it into chunks to avoid fatigue.";
   }, [stats]);
 
   return (
@@ -226,10 +243,11 @@ export default function StatsPage() {
                 Learning statistics <span className="text-slate-400 text-base">(UC-4)</span>
               </h1>
               <p className="text-sm text-slate-300">
-                Overview of your decks, cards, due items, and review progress.
+                Overview of your decks, cards, due items, and review momentum.
               </p>
               <div className="mt-2 text-xs text-slate-500">
-                Endpoint: <span className="text-slate-300">GET {API_BASE}/stats/overview</span>
+                Endpoint: <span className="text-slate-300">GET {API_BASE}/stats/overview</span> ·{" "}
+                <span className="text-emerald-300">Protected</span>
               </div>
             </div>
 
@@ -248,14 +266,18 @@ export default function StatsPage() {
         </div>
 
         {/* Alerts */}
-        {error ? <Alert type="error" title="Error">{error}</Alert> : null}
+        {error ? (
+          <Alert type="error" title="Error">
+            {error}
+          </Alert>
+        ) : null}
 
         <CardShell
           title="Overview"
-          subtitle="This data is scoped to your account."
+          subtitle="Data is scoped to your account."
           right={
             <span className="rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-[11px] text-slate-400">
-              Protected • Bearer token
+              Protected · Bearer token
             </span>
           }
         >
@@ -279,28 +301,30 @@ export default function StatsPage() {
           ) : (
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
-                <StatTile label="Total decks" value={stats.total_decks} />
-                <StatTile label="Total cards" value={stats.total_cards} />
+                <StatTile label="Total decks" value={stats.total_decks} hint="Decks linked to your account." />
+                <StatTile label="Total cards" value={stats.total_cards} hint="All cards across decks." />
 
                 <StatTile
                   label="Due today"
                   value={stats.due_today}
-                  hint="Cards scheduled for review now."
+                  hint={dueHint}
+                  tone={Number(stats.due_today || 0) > 25 ? "warn" : "accent"}
                 />
 
                 <StatTile
                   label="Learned cards"
                   value={stats.learned_cards}
                   hint="Heuristic: repetitions ≥ 3"
+                  tone="success"
                 />
 
                 <div className="md:col-span-2 rounded-3xl border border-slate-800/70 bg-slate-950/50 p-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
                     <div className="text-xs text-slate-400">Reviewed cards</div>
-                    <div className="mt-2 text-3xl font-bold tracking-tight">{stats.reviewed_cards}</div>
-                    <div className="mt-2 text-[11px] text-slate-500">
-                      Cards that received at least one grade.
+                    <div className="mt-2 text-3xl font-bold tracking-tight text-slate-50">
+                      {stats.reviewed_cards ?? "..."}
                     </div>
+                    <div className="mt-2 text-[11px] text-slate-500">Cards that received at least one grade.</div>
                   </div>
 
                   <div className="w-full md:w-[320px]">
@@ -310,13 +334,11 @@ export default function StatsPage() {
                     </div>
                     <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-900/60 border border-slate-800">
                       <div
-                        className="h-full bg-emerald-500/70"
+                        className="h-full bg-emerald-500/70 transition-all duration-300"
                         style={{ width: `${completionHint?.pct ?? 0}%` }}
                       />
                     </div>
-                    <div className="mt-2 text-[11px] text-slate-600">
-                      Tip: Keep daily reviews small & consistent.
-                    </div>
+                    <div className="mt-2 text-[11px] text-slate-600">Tip: Keep daily reviews small & consistent.</div>
                   </div>
                 </div>
               </div>
@@ -324,7 +346,7 @@ export default function StatsPage() {
               <div className="rounded-2xl border border-slate-800/70 bg-slate-950/30 p-4">
                 <div className="text-sm font-semibold">Next step</div>
                 <div className="mt-1 text-xs text-slate-400">
-                  If “Due today” is 0, you can still practice by reviewing another deck or generating new cards.
+                  If "Due today" is 0, hop into Review to cement recent learning or add new cards from Profile.
                 </div>
               </div>
             </div>
@@ -332,7 +354,7 @@ export default function StatsPage() {
         </CardShell>
 
         <footer className="pb-4 text-center text-xs text-slate-600">
-          Stats UI • consistent Tailwind components • App Router navigation
+          Stats UI · consistent Tailwind components · App Router navigation
         </footer>
       </div>
     </main>
