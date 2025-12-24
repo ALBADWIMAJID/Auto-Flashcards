@@ -291,6 +291,23 @@
     "signOut": "Sign Out",
     "welcome": "Welcome back, {name}!",
     "fallbackName": "Student",
+    "overview": {
+      "title": "Workspace overview",
+      "subtitle": "Your study activity at a glance.",
+      "stats": {
+        "decks": "Decks",
+        "cards": "Cards",
+        "uploads": "Uploads",
+        "maxCards": "AI cards/run",
+        "latestUpload": "Latest upload"
+      }
+    },
+    "actions": {
+      "goToReview": "Go to Review"
+    },
+    "status": {
+      "signedIn": "Signed in"
+    },
     "createDeck": {
       "title": "Create New Deck",
       "subtitle": "Build your flashcard collection",
@@ -305,6 +322,8 @@
       "title": "Upload Source File",
       "subtitle": "Auto-generate flashcards with AI",
       "supported": "Supported: .txt, .pdf, .docx, .png, .jpg, .jpeg, .webp",
+      "dropHint": "Drag & drop or click to select a file",
+      "recentTitle": "Recent uploads",
       "maxCardsLabel": "Max cards",
       "maxCardsHint": "1-30",
       "uploading": "Uploading...",
@@ -313,8 +332,12 @@
     "collection": {
       "title": "Your Deck Collection",
       "count": "{count} decks total",
+      "filteredCount": "Showing {shown} of {total} decks",
+      "searchPlaceholder": "Search decks...",
       "emptyTitle": "No decks yet",
       "emptyHint": "Create your first deck above to get started!",
+      "noResultsTitle": "No matching decks",
+      "noResultsHint": "Try a different search.",
       "cardsCount": "{count} cards",
       "generate": "Generate Cards",
       "generating": "Generating..."

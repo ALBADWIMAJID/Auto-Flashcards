@@ -57,6 +57,24 @@ function sanitizeFileName(name) {
   return safeExt ? `${finalStem}.${safeExt}` : finalStem;
 }
 
+function formatBytes(bytes) {
+  const value = Number(bytes);
+  if (!Number.isFinite(value) || value <= 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
+  const idx = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+  const size = value / Math.pow(1024, idx);
+  return `${size.toFixed(size >= 10 || idx === 0 ? 0 : 1)} ${units[idx]}`;
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  try {
+    return new Date(value).toLocaleString();
+  } catch {
+    return "";
+  }
+}
+
 export default function ProfilePage() {
   const t = useTranslations("profile");
   const router = useRouter();
@@ -64,6 +82,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [decks, setDecks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deckQuery, setDeckQuery] = useState("");
 
   const [error, setError] = useState("");
 
@@ -77,10 +96,27 @@ export default function ProfilePage() {
   const [uploadMessage, setUploadMessage] = useState("");
   const [uploadError, setUploadError] = useState("");
   const [uploadMaxCards, setUploadMaxCards] = useState(10);
+  const [isDragActive, setIsDragActive] = useState(false);
 
   const [aiStatus, setAiStatus] = useState("");
   const [aiError, setAiError] = useState("");
   const [generatingDeckId, setGeneratingDeckId] = useState(null);
+
+  const deckCount = decks.length;
+  const cardCount = decks.reduce((sum, deck) => sum + (deck.cards?.length || 0), 0);
+  const recentUploads = uploadedFiles.slice(-3).reverse();
+  const latestUpload = uploadedFiles[uploadedFiles.length - 1] || null;
+  const trimmedQuery = deckQuery.trim().toLowerCase();
+  const filteredDecks = trimmedQuery
+    ? decks.filter((deck) => {
+        const title = (deck.title || "").toLowerCase();
+        const desc = (deck.description || "").toLowerCase();
+        return title.includes(trimmedQuery) || desc.includes(trimmedQuery);
+      })
+    : decks;
+  const deckCountText = trimmedQuery
+    ? t("collection.filteredCount", { shown: filteredDecks.length, total: deckCount })
+    : t("collection.count", { count: deckCount });
 
   const apiFetch = async (path, options = {}) => {
     const { data: sessionData, error: sessionErr } = await getSessionSafe();
@@ -178,6 +214,32 @@ export default function ProfilePage() {
     }
   };
 
+  const handleSelectFile = (file) => {
+    if (!file) {
+      setSelectedFile(null);
+      return;
+    }
+    setSelectedFile(file);
+    setUploadError("");
+    setUploadMessage("");
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    setIsDragActive(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragActive(false);
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    setIsDragActive(false);
+    const file = event.dataTransfer?.files?.[0];
+    if (file) handleSelectFile(file);
+  };
+
   const handleFileUpload = async (e) => {
     e.preventDefault();
     setUploadError("");
@@ -224,7 +286,13 @@ export default function ProfilePage() {
 
       setUploadedFiles((prev) => [
         ...prev,
-        { name: file.name, path: data?.path || filePath },
+        {
+          name: file.name,
+          path: data?.path || filePath,
+          size: file.size || 0,
+          type: file.type || guessMimeByName(file.name),
+          uploadedAt: new Date().toISOString(),
+        },
       ]);
 
       setSelectedFile(null);
@@ -367,18 +435,68 @@ export default function ProfilePage() {
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <header className="mb-6 sm:mb-8 p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-surface-3/80 to-surface-2/90 backdrop-blur-xl border border-border-strong/60 shadow-xl">
-          <div className="flex items-center gap-4 mb-3">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-2xl sm:text-3xl shadow-lg">
-              AF
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-2xl sm:text-3xl shadow-lg">
+                AF
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">
+                  {t("welcome", { name: user.user_metadata?.full_name || t("fallbackName") })}
+                </h1>
+                <p className="text-muted text-sm sm:text-base">{user.email}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-200">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+                    {t("status.signedIn")}
+                  </span>
+                  {latestUpload && (
+                    <span className="inline-flex items-center gap-2 rounded-full border border-border-strong/70 bg-surface-3/70 px-3 py-1 text-xs text-muted-strong max-w-[320px]">
+                      <span>{t("overview.stats.latestUpload")}:</span>
+                      <span className="truncate">{latestUpload.name}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">
-                {t("welcome", { name: user.user_metadata?.full_name || t("fallbackName") })}
-              </h1>
-              <p className="text-muted text-sm sm:text-base">{user.email}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => router.push("/review")}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-900 font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {t("actions.goToReview")}
+              </button>
             </div>
           </div>
         </header>
+
+        <section className="mb-6 sm:mb-8">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-4">
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("overview.title")}</h2>
+              <p className="text-sm text-muted">{t("overview.subtitle")}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="rounded-2xl border border-border-strong/70 bg-surface-3/90 p-4 shadow-lg">
+              <p className="text-xs uppercase tracking-wide text-muted-faint">{t("overview.stats.decks")}</p>
+              <p className="mt-2 text-2xl font-bold text-foreground">{deckCount}</p>
+            </div>
+            <div className="rounded-2xl border border-border-strong/70 bg-surface-3/90 p-4 shadow-lg">
+              <p className="text-xs uppercase tracking-wide text-muted-faint">{t("overview.stats.cards")}</p>
+              <p className="mt-2 text-2xl font-bold text-foreground">{cardCount}</p>
+            </div>
+            <div className="rounded-2xl border border-border-strong/70 bg-surface-3/90 p-4 shadow-lg">
+              <p className="text-xs uppercase tracking-wide text-muted-faint">{t("overview.stats.uploads")}</p>
+              <p className="mt-2 text-2xl font-bold text-foreground">{uploadedFiles.length}</p>
+            </div>
+            <div className="rounded-2xl border border-border-strong/70 bg-surface-3/90 p-4 shadow-lg">
+              <p className="text-xs uppercase tracking-wide text-muted-faint">{t("overview.stats.maxCards")}</p>
+              <p className="mt-2 text-2xl font-bold text-foreground">{uploadMaxCards}</p>
+            </div>
+          </div>
+        </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="p-6 sm:p-8 rounded-2xl bg-surface-3/90 backdrop-blur-xl border border-border-strong/60 shadow-xl hover:border-violet-500/50 transition-all duration-300">
@@ -470,18 +588,39 @@ export default function ProfilePage() {
             </div>
 
             <form onSubmit={handleFileUpload} className="space-y-4">
-              <div className="relative">
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`relative rounded-2xl border-2 border-dashed px-4 py-6 transition-all ${
+                  isDragActive
+                    ? "border-blue-400 bg-blue-500/10 shadow-lg shadow-blue-500/20"
+                    : "border-border-strong bg-surface-2/80"
+                }`}
+              >
                 <input
                   type="file"
                   accept=".txt,.pdf,.docx,.png,.jpg,.jpeg,.webp"
-                  onChange={(e) => {
-                    setSelectedFile(e.target.files?.[0] || null);
-                    setUploadError("");
-                    setUploadMessage("");
-                  }}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-border-strong bg-surface-2/80 text-muted-strong file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500/20 file:text-blue-400 file:font-medium hover:border-blue-500/50 transition-all cursor-pointer"
+                  onChange={(e) => handleSelectFile(e.target.files?.[0] || null)}
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                 />
-                <p className="mt-2 text-xs text-muted-faint">{t("upload.supported")}</p>
+                <div className="pointer-events-none flex flex-col items-center gap-3 text-center">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {selectedFile ? selectedFile.name : t("upload.dropHint")}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-faint">
+                      {selectedFile
+                        ? `${formatBytes(selectedFile.size)} • ${(selectedFile.type || guessMimeByName(selectedFile.name) || "file").toUpperCase()}`
+                        : t("upload.supported")}
+                    </p>
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-muted-strong mb-2">
@@ -540,6 +679,26 @@ export default function ProfilePage() {
                   <p className="text-green-200 text-sm">{uploadMessage}</p>
                 </div>
               )}
+              {recentUploads.length > 0 && (
+                <div className="rounded-xl border border-border-strong/70 bg-surface-2/70 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-faint">
+                    {t("upload.recentTitle")}
+                  </p>
+                  <div className="mt-3 space-y-2">
+                    {recentUploads.map((item) => (
+                      <div
+                        key={item.path}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-surface-3/70 px-3 py-2 text-xs"
+                      >
+                        <span className="text-muted-strong truncate">{item.name}</span>
+                        <span className="text-muted-faint whitespace-nowrap">
+                          {formatBytes(item.size)} • {formatDate(item.uploadedAt)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </form>
           </div>
         </div>
@@ -566,19 +725,30 @@ export default function ProfilePage() {
         )}
 
         <section className="p-6 sm:p-8 rounded-2xl bg-surface-3/90 backdrop-blur-xl border border-border-strong/60 shadow-xl">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground">{t("collection.title")}</h2>
+                <p className="text-muted text-sm">{deckCountText}</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground">{t("collection.title")}</h2>
-              <p className="text-muted text-sm">{t("collection.count", { count: decks.length })}</p>
+            <div className="w-full sm:w-64">
+              <input
+                type="text"
+                value={deckQuery}
+                onChange={(e) => setDeckQuery(e.target.value)}
+                placeholder={t("collection.searchPlaceholder")}
+                className="w-full px-4 py-2.5 rounded-xl border border-border-strong bg-surface-2/80 text-foreground placeholder:text-muted-faint outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+              />
             </div>
           </div>
 
-          {decks.length === 0 ? (
+          {deckCount === 0 ? (
             <div className="text-center py-12">
               <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-surface-4/60 flex items-center justify-center">
                 <svg className="w-10 h-10 text-muted-faint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -588,9 +758,19 @@ export default function ProfilePage() {
               <p className="text-muted text-lg">{t("collection.emptyTitle")}</p>
               <p className="text-muted-faint text-sm mt-2">{t("collection.emptyHint")}</p>
             </div>
+          ) : filteredDecks.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-surface-4/60 flex items-center justify-center">
+                <svg className="w-10 h-10 text-muted-faint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-6 4h4m1-10h.01M12 5a7 7 0 100 14 7 7 0 000-14z" />
+                </svg>
+              </div>
+              <p className="text-muted text-lg">{t("collection.noResultsTitle")}</p>
+              <p className="text-muted-faint text-sm mt-2">{t("collection.noResultsHint")}</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {decks.map((deck) => (
+              {filteredDecks.map((deck) => (
                 <div
                   key={deck.id}
                   className="group p-6 rounded-xl bg-surface-2/90 border border-border-strong hover:border-violet-500/50 shadow-lg hover:shadow-violet-500/20 transition-all duration-300 hover:scale-[1.02]"
