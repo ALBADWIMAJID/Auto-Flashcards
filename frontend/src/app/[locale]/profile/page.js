@@ -12,11 +12,19 @@ const BUCKET = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || "uploads";
 
 const MAX_ANSWER_LEN = 2000;
 const MAX_QUESTION_LEN = 500;
+const MIN_GENERATE_CARDS = 1;
+const MAX_GENERATE_CARDS = 30;
 
 function clipStr(s, maxLen) {
   if (!s) return "";
   const t = String(s);
   return t.length > maxLen ? t.slice(0, maxLen) : t;
+}
+
+function clampInt(value, min, max) {
+  const num = Number.parseInt(value, 10);
+  if (Number.isNaN(num)) return min;
+  return Math.min(Math.max(num, min), max);
 }
 
 function guessMimeByName(name) {
@@ -68,6 +76,7 @@ export default function ProfilePage() {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [uploadMessage, setUploadMessage] = useState("");
   const [uploadError, setUploadError] = useState("");
+  const [uploadMaxCards, setUploadMaxCards] = useState(10);
 
   const [aiStatus, setAiStatus] = useState("");
   const [aiError, setAiError] = useState("");
@@ -256,7 +265,8 @@ export default function ProfilePage() {
 
       const form = new FormData();
       form.append("file", f);
-      form.append("max_cards", "5");
+      const maxCards = clampInt(uploadMaxCards, MIN_GENERATE_CARDS, MAX_GENERATE_CARDS);
+      form.append("max_cards", String(maxCards));
 
       const aiRes = await fetch(`${API_BASE}/ai/generate-file`, {
         method: "POST",
@@ -472,6 +482,23 @@ export default function ProfilePage() {
                   className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-border-strong bg-surface-2/80 text-muted-strong file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500/20 file:text-blue-400 file:font-medium hover:border-blue-500/50 transition-all cursor-pointer"
                 />
                 <p className="mt-2 text-xs text-muted-faint">{t("upload.supported")}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-muted-strong mb-2">
+                  {t("upload.maxCardsLabel")}
+                </label>
+                <input
+                  type="number"
+                  min={MIN_GENERATE_CARDS}
+                  max={MAX_GENERATE_CARDS}
+                  value={uploadMaxCards}
+                  onChange={(e) => {
+                    const next = clampInt(e.target.value, MIN_GENERATE_CARDS, MAX_GENERATE_CARDS);
+                    setUploadMaxCards(next);
+                  }}
+                  className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-border-strong bg-surface-2/80 text-foreground placeholder:text-muted-faint outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                />
+                <p className="mt-2 text-xs text-muted-faint">{t("upload.maxCardsHint")}</p>
               </div>
 
               <button

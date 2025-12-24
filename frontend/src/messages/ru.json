@@ -305,6 +305,8 @@
       "title": "Загрузить исходный файл",
       "subtitle": "Автогенерация карточек с ИИ",
       "supported": "Поддерживается: .txt, .pdf, .docx, .png, .jpg, .jpeg, .webp",
+      "maxCardsLabel": "Макс. карточек",
+      "maxCardsHint": "1-30",
       "uploading": "Загрузка...",
       "submit": "Загрузить файл"
     },
