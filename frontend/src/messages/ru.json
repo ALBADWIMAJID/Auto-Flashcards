@@ -304,7 +304,7 @@
     "upload": {
       "title": "Загрузить исходный файл",
       "subtitle": "Автогенерация карточек с ИИ",
-      "supported": "Поддерживается: .txt, .pdf, .docx",
+      "supported": "Поддерживается: .txt, .pdf, .docx, .png, .jpg, .jpeg, .webp",
       "uploading": "Загрузка...",
       "submit": "Загрузить файл"
     },
@@ -326,7 +326,7 @@
       "createDeckUnknown": "Ошибка при создании колоды",
       "noFile": "Сначала выберите файл.",
       "noUser": "Нет аутентифицированного пользователя.",
-      "unsupportedFile": "Поддерживаемые файлы: .txt .pdf .docx",
+      "unsupportedFile": "Поддерживаемые файлы: .txt .pdf .docx .png .jpg .jpeg .webp",
       "uploaded": "Загружено: {name}",
       "uploadError": "Ошибка при загрузке файла",
       "noUpload": "Сначала загрузите файл.",

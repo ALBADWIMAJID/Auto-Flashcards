@@ -25,7 +25,28 @@ function guessMimeByName(name) {
   if (n.endsWith(".docx"))
     return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   if (n.endsWith(".txt")) return "text/plain";
+  if (n.endsWith(".png")) return "image/png";
+  if (n.endsWith(".jpg") || n.endsWith(".jpeg")) return "image/jpeg";
+  if (n.endsWith(".webp")) return "image/webp";
   return "";
+}
+
+function sanitizeFileName(name) {
+  const raw = String(name || "file").trim();
+  const parts = raw.split(".");
+  const ext = parts.length > 1 ? parts.pop() : "";
+  const stem = parts.join(".") || "file";
+  const safeStem = stem
+    .normalize("NFKD")
+    .replace(/[^a-zA-Z0-9._-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  const safeExt = ext
+    .normalize("NFKD")
+    .replace(/[^a-zA-Z0-9]+/g, "")
+    .toLowerCase();
+  const finalStem = safeStem || "file";
+  return safeExt ? `${finalStem}.${safeExt}` : finalStem;
 }
 
 export default function ProfilePage() {
@@ -171,12 +192,19 @@ export default function ProfilePage() {
 
       const name = (file.name || "").toLowerCase();
       const ok =
-        name.endsWith(".txt") || name.endsWith(".pdf") || name.endsWith(".docx");
+        name.endsWith(".txt") ||
+        name.endsWith(".pdf") ||
+        name.endsWith(".docx") ||
+        name.endsWith(".png") ||
+        name.endsWith(".jpg") ||
+        name.endsWith(".jpeg") ||
+        name.endsWith(".webp");
       if (!ok) {
         throw new Error(t("messages.unsupportedFile"));
       }
 
-      const fileName = `${Date.now()}-${file.name}`;
+      const safeName = sanitizeFileName(file.name);
+      const fileName = `${Date.now()}-${safeName}`;
       const filePath = `user-${user.id}/${fileName}`;
 
       const { data, error: uploadErrorObj } = await supabase.storage
@@ -435,7 +463,7 @@ export default function ProfilePage() {
               <div className="relative">
                 <input
                   type="file"
-                  accept=".txt,.pdf,.docx"
+                  accept=".txt,.pdf,.docx,.png,.jpg,.jpeg,.webp"
                   onChange={(e) => {
                     setSelectedFile(e.target.files?.[0] || null);
                     setUploadError("");

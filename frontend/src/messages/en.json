@@ -304,7 +304,7 @@
     "upload": {
       "title": "Upload Source File",
       "subtitle": "Auto-generate flashcards with AI",
-      "supported": "Supported: .txt, .pdf, .docx",
+      "supported": "Supported: .txt, .pdf, .docx, .png, .jpg, .jpeg, .webp",
       "uploading": "Uploading...",
       "submit": "Upload File"
     },
@@ -326,7 +326,7 @@
       "createDeckUnknown": "Error while creating deck",
       "noFile": "Please choose a file first.",
       "noUser": "No authenticated user.",
-      "unsupportedFile": "Supported files: .txt .pdf .docx",
+      "unsupportedFile": "Supported files: .txt .pdf .docx .png .jpg .jpeg .webp",
       "uploaded": "Uploaded: {name}",
       "uploadError": "Error while uploading file",
       "noUpload": "Please upload a file first.",

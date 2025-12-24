@@ -304,7 +304,7 @@
     "upload": {
       "title": "رفع ملف المصدر",
       "subtitle": "توليد البطاقات تلقائيًا بالذكاء الاصطناعي",
-      "supported": "المدعوم: .txt، .pdf، .docx",
+      "supported": "المدعوم: .txt، .pdf، .docx، .png، .jpg، .jpeg، .webp",
       "uploading": "جارٍ الرفع...",
       "submit": "رفع الملف"
     },
@@ -326,7 +326,7 @@
       "createDeckUnknown": "خطأ أثناء إنشاء المجموعة",
       "noFile": "رجاءً اختر ملفًا أولًا.",
       "noUser": "لا يوجد مستخدم مسجّل الدخول.",
-      "unsupportedFile": "الملفات المدعومة: .txt .pdf .docx",
+      "unsupportedFile": "الملفات المدعومة: .txt .pdf .docx .png .jpg .jpeg .webp",
       "uploaded": "تم رفع: {name}",
       "uploadError": "خطأ أثناء رفع الملف",
       "noUpload": "رجاءً ارفع ملفًا أولًا.",

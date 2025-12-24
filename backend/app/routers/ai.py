@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import base64
 import os
 from io import BytesIO
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from openai import OpenAI
 
 from ml.service.flashcards_service import (
     flashcards_service,
@@ -36,6 +38,87 @@ def _guess_ext(filename: str) -> str:
     if "." in name:
         return name.rsplit(".", 1)[-1]
     return ""
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _clean_env_value(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    cleaned = value.strip()
+    if (cleaned.startswith('"') and cleaned.endswith('"')) or (
+        cleaned.startswith("'") and cleaned.endswith("'")
+    ):
+        cleaned = cleaned[1:-1].strip()
+    return cleaned or None
+
+
+_IMAGE_MIME_BY_EXT = {
+    "png": "image/png",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "webp": "image/webp",
+}
+
+
+def _get_openai_key() -> str:
+    api_key = _clean_env_value(os.getenv("OPENAI_API_KEY"))
+    if not api_key:
+        raise HTTPException(
+            status_code=500,
+            detail="OPENAI_API_KEY is not set; image OCR is unavailable.",
+        )
+    return api_key
+
+
+def _get_openai_model() -> str:
+    return (
+        _clean_env_value(os.getenv("OPENAI_OCR_MODEL"))
+        or _clean_env_value(os.getenv("OPENAI_MODEL"))
+        or "gpt-4o-mini"
+    )
+
+
+def _extract_text_from_image(raw: bytes, mime_type: str) -> str:
+    if not _env_bool("LLM_ENABLED", True):
+        raise HTTPException(
+            status_code=400,
+            detail="LLM is disabled (LLM_ENABLED=0); image OCR is unavailable.",
+        )
+
+    api_key = _get_openai_key()
+    model = _get_openai_model()
+    timeout_sec = float(os.getenv("OPENAI_TIMEOUT_SEC", "12.0"))
+
+    data_url = f"data:{mime_type};base64,{base64.b64encode(raw).decode('ascii')}"
+    prompt = "Extract all readable text from this image. Return plain text only."
+
+    try:
+        client = OpenAI(api_key=api_key, timeout=timeout_sec)
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": data_url}},
+                    ],
+                }
+            ],
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Image OCR failed via OpenAI: {exc}",
+        )
+
+    return (resp.choices[0].message.content or "").strip()
 
 
 async def _extract_text_from_upload(file: UploadFile) -> str:
@@ -90,10 +173,22 @@ async def _extract_text_from_upload(file: UploadFile) -> str:
     if content_type.startswith("text/") or ext in {"txt", "md", "csv", "log"}:
         return raw.decode("utf-8", errors="replace").strip()
 
+    # Images (OCR via OpenAI)
+    if content_type.startswith("image/") or ext in _IMAGE_MIME_BY_EXT:
+        mime_type = (
+            content_type
+            if content_type.startswith("image/")
+            else _IMAGE_MIME_BY_EXT.get(ext, "image/png")
+        )
+        return _extract_text_from_image(raw, mime_type)
+
     # Unknown type
     raise HTTPException(
         status_code=415,
-        detail=f"Unsupported file type: content_type={file.content_type}, filename={file.filename}",
+        detail=(
+            "Unsupported file type. Supported: txt/pdf/docx and images (png/jpg/jpeg/webp). "
+            f"content_type={file.content_type}, filename={file.filename}"
+        ),
     )
 
 
