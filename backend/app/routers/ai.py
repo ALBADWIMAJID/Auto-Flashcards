@@ -93,7 +93,7 @@ def _extract_text_from_image(raw: bytes, mime_type: str) -> str:
 
     api_key = _get_openai_key()
     model = _get_openai_model()
-    timeout_sec = float(os.getenv("OPENAI_TIMEOUT_SEC", "12.0"))
+    timeout_sec = float(os.getenv("OPENAI_TIMEOUT_SEC", "30.0"))
 
     data_url = f"data:{mime_type};base64,{base64.b64encode(raw).decode('ascii')}"
     prompt = "Extract all readable text from this image. Return plain text only."

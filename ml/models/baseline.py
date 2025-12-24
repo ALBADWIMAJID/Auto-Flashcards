@@ -54,12 +54,12 @@ def _env_float(name: str, default: float) -> float:
 LLM_ENABLED = _env_bool("LLM_ENABLED", True)
 
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-OPENAI_TIMEOUT_SEC = _env_float("OPENAI_TIMEOUT_SEC", 12.0)
-OPENAI_MAX_RETRIES = _env_int("OPENAI_MAX_RETRIES", 2)
+OPENAI_TIMEOUT_SEC = _env_float("OPENAI_TIMEOUT_SEC", 30.0)
+OPENAI_MAX_RETRIES = _env_int("OPENAI_MAX_RETRIES", 3)
 OPENAI_DISABLE_COOLDOWN_SEC = _env_int("OPENAI_DISABLE_COOLDOWN_SEC", 300)
 
 # To keep prompts and outputs under control for large documents
-OPENAI_INPUT_MAX_CHARS = _env_int("OPENAI_INPUT_MAX_CHARS", 12000)
+OPENAI_INPUT_MAX_CHARS = _env_int("OPENAI_INPUT_MAX_CHARS", 8000)
 
 # Downstream constraints (your API validation / DB / etc.)
 QUESTION_MAX_LEN = _env_int("FLASHCARD_QUESTION_MAX_LEN", 400)
